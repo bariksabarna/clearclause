@@ -100,6 +100,7 @@ describe('AnalyzingScreen', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: 'lease body' }),
+      signal: expect.any(AbortSignal),
     });
     const readout = screen.getByTestId('readout').textContent;
     expect(readout).toContain('"clauses":2');
@@ -338,6 +339,26 @@ describe('AnalyzingScreen', () => {
     renderAnalyzing(textState());
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('service hiccup'));
     expect(screen.getByText(/We could not finish analyzing this document/)).toBeInTheDocument();
+  });
+
+  it('renders intake guidance when an SSE error carries an intake code', async () => {
+    installSseFetcher([['error', { code: 'SCANNED_PDF', message: 'No text layer.' }]]);
+    renderAnalyzing(textState());
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: 'See guidance' })).toHaveAttribute(
+        'href',
+        '/issues?code=SCANNED_PDF'
+      )
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('No text layer.');
+  });
+
+  it('still allows aborting before a stream has started', async () => {
+    globalThis.fetch = vi.fn();
+    renderAnalyzing(textState({ describing: false }));
+    fireEvent.click(screen.getByRole('button', { name: 'Abort Inspection' }));
+    await waitFor(() => expect(screen.getByTestId('home-dest')).toBeInTheDocument());
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('uses a generic message for SSE errors without a usable message', async () => {

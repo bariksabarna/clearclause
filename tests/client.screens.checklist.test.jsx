@@ -191,6 +191,24 @@ describe('ChecklistScreen', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Ask about the penalty clause');
   });
 
+  it('shows a fallback toast when the clipboard write is rejected', async () => {
+    stubApi({
+      derive: { checklist: ['Item'], lawyerQuestions: ['Ask about the penalty clause'] },
+    });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
+      configurable: true,
+    });
+    renderChecklist({ ...initialState, fileName: 'Lease.pdf', clauses: clausesWith() });
+    const copyButton = await screen.findByRole('button', { name: /Copy Question/ });
+    fireEvent.click(copyButton);
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Could not copy automatically — please copy manually.'
+      )
+    );
+  });
+
   it('exports a checklist PDF and plain text, then clears the toast', async () => {
     stubApi({
       derive: { checklist: ['Item'], lawyerQuestions: [] },

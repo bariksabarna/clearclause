@@ -59,7 +59,7 @@ export default function AnalysisScreen() {
 
   const jumpToHighestRisk = () => {
     const firstHigh = clauses.find((clause) => clause.severity === 'High');
-    if (firstHigh) scrollToClause(firstHigh.id);
+    scrollToClause(firstHigh.id);
   };
 
   const handlePrint = () => {
@@ -90,7 +90,8 @@ export default function AnalysisScreen() {
             <button
               type="button"
               onClick={jumpToHighestRisk}
-              className="flex items-center gap-1.5 bg-primary px-4 py-2 font-label-md text-label-md font-semibold text-on-primary shadow-sm transition-all hover:bg-primary-container"
+              disabled={counts.High === 0}
+              className="flex items-center gap-1.5 bg-primary px-4 py-2 font-label-md text-label-md font-semibold text-on-primary shadow-sm transition-all hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
                 bolt
@@ -224,6 +225,7 @@ export default function AnalysisScreen() {
               <article
                 key={clause.id}
                 data-risk={clause.severity.toLowerCase()}
+                onClick={() => scrollToClause(clause.id)}
                 className="cursor-pointer bg-surface-container-lowest p-4 shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <div className="mb-2 flex items-start justify-between gap-2">

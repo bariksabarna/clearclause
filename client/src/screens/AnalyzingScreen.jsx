@@ -55,12 +55,14 @@ export default function AnalyzingScreen() {
   const [tokenCount, setTokenCount] = useState(0);
   const startedRef = useRef(false);
   const cancelledRef = useRef(false);
+  const controllerRef = useRef(null);
 
   const phaseIndex = phaseIndexForStage(stage);
   const progress = PROGRESS_BY_STAGE[stage] ?? 12;
 
   const abortInspection = () => {
     cancelledRef.current = true;
+    controllerRef.current?.abort();
     navigate('/');
   };
 
@@ -68,58 +70,64 @@ export default function AnalyzingScreen() {
     if (!state.describing || startedRef.current) return;
     startedRef.current = true;
     const payload = buildAnalyzePayload(state.payload);
+    const controller = new AbortController();
+    controllerRef.current = controller;
     let cancelled = false;
 
-    streamAnalyze(payload, {
-      status: (data) => {
-        if (cancelled || cancelledRef.current) return;
-        if (typeof data?.stage === 'string') setStage(data.stage);
+    streamAnalyze(
+      payload,
+      {
+        status: (data) => {
+          if (cancelled || cancelledRef.current) return;
+          if (typeof data?.stage === 'string') setStage(data.stage);
+        },
+        clauses: (data) => {
+          const clauses = Array.isArray(data.clauses) ? data.clauses : [];
+          dispatch(setClauses(clauses));
+          dispatch(
+            setDocumentText(
+              clauses
+                .map((clause) => clause.sourceText ?? '')
+                .filter(Boolean)
+                .join('\n\n')
+            )
+          );
+          setTokenCount(
+            clauses.reduce(
+              (sum, clause) =>
+                sum +
+                String(clause.sourceText ?? '')
+                  .split(/\s+/)
+                  .filter(Boolean).length,
+              0
+            )
+          );
+        },
+        inconsistencies: (data) => {
+          dispatch(
+            setInconsistencies(Array.isArray(data.inconsistencies) ? data.inconsistencies : [])
+          );
+        },
+        summary: (data) => {
+          if (!cancelled && typeof data?.summary === 'string') dispatch(setSummary(data.summary));
+        },
+        done: () => {
+          if (cancelled || cancelledRef.current) return;
+          dispatch(completeAnalysis());
+          navigate('/analysis', { replace: true });
+        },
+        error: (data) => {
+          if (cancelled || cancelledRef.current) return;
+          dispatch(
+            failAnalysis({
+              code: typeof data?.code === 'string' ? data.code : 'AI_UNREACHABLE',
+              message: typeof data?.message === 'string' ? data.message : 'Analysis interrupted.',
+            })
+          );
+        },
       },
-      clauses: (data) => {
-        const clauses = Array.isArray(data.clauses) ? data.clauses : [];
-        dispatch(setClauses(clauses));
-        dispatch(
-          setDocumentText(
-            clauses
-              .map((clause) => clause.sourceText ?? '')
-              .filter(Boolean)
-              .join('\n\n')
-          )
-        );
-        setTokenCount(
-          clauses.reduce(
-            (sum, clause) =>
-              sum +
-              String(clause.sourceText ?? '')
-                .split(/\s+/)
-                .filter(Boolean).length,
-            0
-          )
-        );
-      },
-      inconsistencies: (data) => {
-        dispatch(
-          setInconsistencies(Array.isArray(data.inconsistencies) ? data.inconsistencies : [])
-        );
-      },
-      summary: (data) => {
-        if (!cancelled && typeof data?.summary === 'string') dispatch(setSummary(data.summary));
-      },
-      done: () => {
-        if (cancelled || cancelledRef.current) return;
-        dispatch(completeAnalysis());
-        navigate('/analysis', { replace: true });
-      },
-      error: (data) => {
-        if (cancelled || cancelledRef.current) return;
-        dispatch(
-          failAnalysis({
-            code: 'AI_UNREACHABLE',
-            message: typeof data?.message === 'string' ? data.message : 'Analysis interrupted.',
-          })
-        );
-      },
-    }).catch((error) => {
+      { signal: controller.signal }
+    ).catch((error) => {
       if (cancelled || cancelledRef.current) return;
       setStage('done');
       dispatch(
@@ -132,6 +140,7 @@ export default function AnalyzingScreen() {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [state.describing, state.payload, dispatch, navigate]);
 

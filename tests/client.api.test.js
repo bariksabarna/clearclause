@@ -112,6 +112,15 @@ describe('consumeSse', () => {
     consumeSse('event: message\ndata: hello world\n\n', (event) => events.push(event));
     expect(events).toEqual([{ type: 'message', data: 'hello world' }]);
   });
+
+  it('normalizes CRLF line endings before splitting blocks', () => {
+    const events = [];
+    const rest = consumeSse('event: status\r\ndata: {"stage":"reading"}\r\n\r\n', (event) =>
+      events.push(event)
+    );
+    expect(events).toEqual([{ type: 'status', data: { stage: 'reading' } }]);
+    expect(rest).toBe('');
+  });
 });
 
 describe('streamAnalyze', () => {
@@ -171,6 +180,17 @@ describe('streamAnalyze', () => {
       method: 'POST',
       body: formData,
     });
+  });
+
+  it('forwards an AbortSignal to fetch when one is provided', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      body: { getReader: () => readerFromChunks([]) },
+    });
+    const controller = new AbortController();
+    await streamAnalyze({ text: 'x' }, {}, { signal: controller.signal });
+    const [, init] = globalThis.fetch.mock.calls[0];
+    expect(init.signal).toBe(controller.signal);
   });
 
   it('throws ApiError when the response is not ok', async () => {

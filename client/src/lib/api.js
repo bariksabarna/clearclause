@@ -74,7 +74,7 @@ function parseEventBlock(block) {
 
 /** Consumes complete SSE blocks from a buffer, dispatching and returning the remainder. */
 export function consumeSse(buffer, onEvent) {
-  let rest = buffer;
+  let rest = buffer.replace(/\r\n/g, '\n');
   let boundary;
   while ((boundary = rest.indexOf('\n\n')) !== -1) {
     const block = rest.slice(0, boundary);
@@ -88,9 +88,10 @@ export function consumeSse(buffer, onEvent) {
 /**
  * Stream a document (multipart file) or pasted text ({ text }) through
  * /api/analyze, dispatching `status`, `clauses`, `inconsistencies`, `summary`,
- * `done`, and `error` events to the provided handlers.
+ * `done`, and `error` events to the provided handlers. Pass an AbortSignal via
+ * `options.signal` to cancel the request when the caller unmounts.
  */
-export async function streamAnalyze(payload, handlers = {}) {
+export async function streamAnalyze(payload, handlers = {}, options = {}) {
   const isMultipart = payload instanceof FormData;
   const init = isMultipart
     ? { method: 'POST', body: payload }
@@ -99,6 +100,7 @@ export async function streamAnalyze(payload, handlers = {}) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       };
+  if (options.signal) init.signal = options.signal;
 
   const res = await fetch('/api/analyze', init);
   if (!res.ok || !res.body) {

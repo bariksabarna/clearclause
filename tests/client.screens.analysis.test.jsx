@@ -99,6 +99,18 @@ describe('AnalysisScreen', () => {
     scrollIntoViewSpy.mockRestore();
   });
 
+  it('navigates from the margin card surface itself', () => {
+    const scrollIntoViewSpy = vi
+      .spyOn(Element.prototype, 'scrollIntoView')
+      .mockImplementation(() => {});
+    renderAt(<AnalysisScreen />, {
+      initial: stateWithClauses([medium]),
+    });
+    fireEvent.click(document.querySelector('[data-risk]'));
+    expect(scrollIntoViewSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+    scrollIntoViewSpy.mockRestore();
+  });
+
   it('renders an options panel for high-risk clauses and pins from it', () => {
     const scrollIntoViewSpy = vi
       .spyOn(Element.prototype, 'scrollIntoView')

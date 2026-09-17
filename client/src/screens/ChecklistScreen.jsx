@@ -6,8 +6,8 @@ import { copyText } from '../lib/clipboard.js';
 import DisclaimerBar from '../components/DisclaimerBar.jsx';
 
 function initialItems(strings) {
-  return strings.map((text) => ({
-    key: `checklist-${strings.indexOf(text)}`,
+  return strings.map((text, index) => ({
+    key: `checklist-${index}`,
     text,
     checked: false,
   }));
@@ -90,8 +90,12 @@ export default function ChecklistScreen() {
   };
 
   const handleCopy = async (text) => {
-    await copyText(text);
-    showToast('Question copied to clipboard');
+    try {
+      await copyText(text);
+      showToast('Question copied to clipboard');
+    } catch {
+      showToast('Could not copy automatically — please copy manually.');
+    }
   };
 
   const handleExport = async (format) => {
@@ -288,6 +292,7 @@ export default function ChecklistScreen() {
                 value={custom}
                 onChange={(event) => setCustom(event.target.value)}
                 id="custom-item-input"
+                aria-label="Add a personal contingency or rider request"
                 placeholder="Add personal contingency or rider request..."
                 className="flex-1 bg-surface-container-low px-4 py-2 font-label-md text-label-md text-primary placeholder:text-secondary"
               />
@@ -329,7 +334,10 @@ export default function ChecklistScreen() {
             ) : (
               <div className="flex flex-col gap-4">
                 {lawyerQuestions.map((question, index) => (
-                  <div key={question} className="flex flex-col gap-2 bg-surface-container-low p-5">
+                  <div
+                    key={`${index}-${question}`}
+                    className="flex flex-col gap-2 bg-surface-container-low p-5"
+                  >
                     <span className="font-label-sm text-label-sm font-semibold uppercase text-primary">
                       Issue 0{index + 1}
                     </span>

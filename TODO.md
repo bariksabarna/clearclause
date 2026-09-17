@@ -76,7 +76,7 @@
 - [x] Integration: chat with-answer / without-answer / injection-style question
 - [x] Integration: FR-12 no-persistence + FR-15 no-document-text-in-logs
 - [x] Integration: export endpoint produces a download
-- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **385 tests across 27 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
+- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **396 tests across 27 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
 - [x] `jest-axe` pass; zero critical violations (nested-interactive in UploadDropzone fixed)
 - [x] Seed check: `tests/samples.test.ts` (demo docs still trigger their intended inconsistencies)
 - [x] Full UI suite runs green under `CI=true` (`npm run test:coverage` = 100/100/100/100)
@@ -97,6 +97,15 @@
   - [x] Compare tab clause-level diff (Should) — `alignDiff.ts`, `routes/compare.ts`, `CompareScreen`; `server.alignDiff.test.ts`
   - [x] Error/edge matrix (PRD-1 §8) — all 8 rows mapped: >5 MB (413 + client guard), unsupported/scanned/too-large intake → IssuesScreen, AI retry+backoff → plain message + Try again, 429 `RATE_LIMITED` message carries the retry window, injection logged, chat no-answer state, long-doc chunking
 - [x] Repo public, single branch, < 10 MB; README states vertical/approach/assumptions — published at **https://github.com/bariksabarna/clearclause** (`main` only, 101 files / 1.5 MB `.git`, secret scan clean, `.env`/`node_modules`/`dist`/`coverage` ignored)
+
+## Internal code-quality audit (post-completion)
+
+Two independent read-only audits of `server/` and `client/` surfaced real defects; fixes landed with tests:
+
+- [x] Server: `alignDiff` bounded (`MAX_ALIGNED_CLAUSES`/`MAX_LEVENSHTEIN_PAIRS`/`MAX_LEVENSHTEIN_CHARS` + tail-clause fallback); analyze/compare honor `maxExtractedChars`; per-file upload limit; `entity.parse.failed` → 400; overlap ≥ threshold rejected in config; `geminiClient` fails fast on safety-blocked responses
+- [x] Client: analyze fetch now uses an `AbortSignal` so "Abort Inspection" cancels the request; SSE `error` events propagate their `code` (intake guidance restored); `consumeSse` tolerates CRLF; checklist duplicate-key collisions fixed; clipboard failure shows a fallback toast; custom-item input labelled; "Jump to Highest Risk" disabled when no High clause; margin card is actually clickable
+- [x] `EMPTY_DOCUMENT` is now reachable for empty/too-short **pasted text** (was `UNSUPPORTED_FILE_TYPE`/silent); `AI_TIMEOUT` dead code removed; Dockerfile installs prod deps before `USER node`
+- [ ] Known low-priority hardening (not blocking; documented, not yet fixed): `trust proxy` unset; DOCX zip-bomb not bounded; analyze/chat map unexpected errors to `AI_UNREACHABLE`; SSE backpressure/disconnect handling; summary built from whole-doc text; `validateUpload` is dead middleware; `$500` vs `$500.00` currency false positive in `inconsistencyChecker`
 
 ---
 
