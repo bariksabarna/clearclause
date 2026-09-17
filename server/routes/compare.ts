@@ -14,7 +14,7 @@ import {
   extractedTextTooLarge,
   emptyDocument,
   validationError,
-  AppError,
+  asAppError,
 } from '../errors';
 import { sanitizeText, isMeaningful } from '../services/sanitize';
 import { detectSupportedMime } from '../services/fileSignature';
@@ -73,14 +73,8 @@ export function createCompareRouter(overrides?: { config?: ReturnType<typeof loa
 
         const diffs = alignAndDiff(textA, textB);
         res.json({ diffs });
-      } catch {
-        next(
-          new AppError(
-            'INTERNAL_ERROR',
-            500,
-            'Comparison failed. Please try again with shorter documents.'
-          )
-        );
+      } catch (err) {
+        next(asAppError(err));
       }
     }
   );

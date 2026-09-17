@@ -59,7 +59,7 @@ describe('text extraction failures', () => {
     expect(res.body.code).toBe('INTERNAL_ERROR');
   });
 
-  it('analyze rejects with 503 AI_UNREACHABLE when pdf extraction crashes', async () => {
+  it('analyze rejects with 500 INTERNAL_ERROR when pdf extraction crashes', async () => {
     fileTypeMock.mockResolvedValue({ mime: 'application/pdf', ext: 'pdf' });
     pdfParseMock.mockImplementation(() => ({
       getText: () => Promise.reject(new Error('corrupt file')),
@@ -67,7 +67,7 @@ describe('text extraction failures', () => {
     const res = await request(makeApp())
       .post('/api/analyze')
       .attach('document', Buffer.from('%PDF-1.7 broken'), 'x.pdf');
-    expect(res.status).toBe(503);
-    expect(res.body.code).toBe('AI_UNREACHABLE');
+    expect(res.status).toBe(500);
+    expect(res.body.code).toBe('INTERNAL_ERROR');
   });
 });

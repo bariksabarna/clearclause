@@ -13,7 +13,7 @@ import {
   extractedTextTooLarge,
   unsupportedFileType,
   emptyDocument,
-  AppError,
+  asAppError,
 } from '../errors';
 import { sanitizeText, isMeaningful, detectInjectionFlag } from '../services/sanitize';
 import { detectSupportedMime } from '../services/fileSignature';
@@ -156,17 +156,10 @@ export function createAnalyzeRouter(overrides?: {
         sendSse(res, 'summary', { summary });
         sendSse(res, 'done', { apiVersion: '1.0' });
         res.end();
-      } catch {
+      } catch (err) {
         if (!res.headersSent) {
-          res
-            .status(503)
-            .json(
-              new AppError(
-                'AI_UNREACHABLE',
-                503,
-                'The analysis service encountered an error. Please try again.'
-              ).toJSON()
-            );
+          const error = asAppError(err);
+          res.status(error.status).json(error.toJSON());
           return;
         }
         try {

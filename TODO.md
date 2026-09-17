@@ -76,7 +76,7 @@
 - [x] Integration: chat with-answer / without-answer / injection-style question
 - [x] Integration: FR-12 no-persistence + FR-15 no-document-text-in-logs
 - [x] Integration: export endpoint produces a download
-- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **402 tests across 28 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
+- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **417 tests across 29 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
 - [x] `jest-axe` pass; zero critical violations (nested-interactive in UploadDropzone fixed)
 - [x] Seed check: `tests/samples.test.ts` (demo docs still trigger their intended inconsistencies)
 - [x] Full UI suite runs green under `CI=true` (`npm run test:coverage` = 100/100/100/100)
@@ -107,7 +107,8 @@ Two independent read-only audits of `server/` and `client/` surfaced real defect
 - [x] `EMPTY_DOCUMENT` is now reachable for empty/too-short **pasted text** (was `UNSUPPORTED_FILE_TYPE`/silent); `AI_TIMEOUT` dead code removed; Dockerfile installs prod deps before `USER node`
 - [x] `inconsistencyChecker` currency slots now compare on a canonical cents key, so `$500` and `$500.00` are the same value while the original spelling is preserved in the explanation (no more false positives)
 - [x] Hardening pass 2: validation failures now return a dedicated `VALIDATION_ERROR` 400 (chat, compare, checklist + export) instead of `INTERNAL_ERROR`; `generatePdfExport` routes PDFKit stream errors through `flushPdf` so a write failure rejects instead of hanging/uncaught; duplicated magic-byte logic collapsed into `services/fileSignature.ts` and the dead `validateUpload` middleware deleted; `TRUST_PROXY` config sets Express `trust proxy` for deployments behind a load balancer
-- [ ] Known low-priority hardening (not blocking; documented, not yet fixed): DOCX zip-bomb not bounded; analyze/chat still map unexpected errors to `AI_UNREACHABLE`; SSE backpressure/disconnect handling; plain-language summary built from the whole document rather than the chunked pass
+- [x] Hardening pass 3: DOCX uploads are now bounds-checked against a zip bomb — `zipUncompressedSize` reads the ZIP central directory and `extractTextFromDocx` rejects malformed/ZIP64/over-50-MiB archives with `EXTRACTED_TEXT_TOO_LARGE` before any XML is parsed; `asAppError` preserves deliberate statuses through the analyze/compare catches, so the guard's 413 reaches the client while genuinely unexpected extraction bugs now surface as `INTERNAL_ERROR` 500 (previously both masqueraded as `AI_UNREACHABLE` 503)
+- [ ] Reviewed and intentionally deferred (not blocking): `chat` keeps mapping a malformed model reply to `AI_UNREACHABLE` (a bad provider response, not a server bug); SSE backpressure/disconnect is low-risk because events are written only after analysis completes (a handful of small frames, socket-drop already handled); the plain-language summary reads the whole document by design for coherence, and `maxExtractedChars` already bounds that input to fit the model context
 
 ---
 

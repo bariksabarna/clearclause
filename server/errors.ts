@@ -53,6 +53,21 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * Preserve an application error, wrapping anything else as an internal error.
+ *
+ * Lets route handlers keep deliberate statuses (e.g. a 413 from the DOCX
+ * decompression guard) while still failing closed with a 500 for bugs that
+ * were never given a user-facing status.
+ *
+ * @param err - Value thrown inside a route handler's try block.
+ * @returns The original AppError, or a generic 500 INTERNAL_ERROR wrapper.
+ */
+export function asAppError(err: unknown): AppError {
+  if (err instanceof AppError) return err;
+  return new AppError('INTERNAL_ERROR', 500, 'Something went wrong on our end. Please try again.');
+}
+
 /** Request body or parameters failed validation (FR-1). */
 export function validationError(message: string): AppError {
   return new AppError('VALIDATION_ERROR', 400, message);
