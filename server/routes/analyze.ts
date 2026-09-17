@@ -9,7 +9,13 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import multer from 'multer';
 import { fileTypeFromBuffer } from 'file-type';
 import { loadConfig } from '../config';
-import { scannedPdf, extractedTextTooLarge, unsupportedFileType, AppError } from '../errors';
+import {
+  scannedPdf,
+  extractedTextTooLarge,
+  unsupportedFileType,
+  emptyDocument,
+  AppError,
+} from '../errors';
 import { sanitizeText, isMeaningful, detectInjectionFlag } from '../services/sanitize';
 import { extractText } from '../services/extractText';
 import { needsChunking, chunkText, mergeChunkResults } from '../services/chunker';
@@ -69,12 +75,11 @@ export function createAnalyzeRouter(overrides?: {
           rawText = await extractText(detected.mime, req.file.buffer);
         } else {
           rawText = typeof req.body?.text === 'string' ? req.body.text : '';
-          if (rawText.length === 0) return next(unsupportedFileType());
         }
 
         const sanitised = sanitizeText(rawText);
         if (!isMeaningful(sanitised)) {
-          return next(scannedPdf());
+          return next(req.file ? scannedPdf() : emptyDocument());
         }
         if (sanitised.length > config.maxExtractedChars) {
           return next(extractedTextTooLarge());

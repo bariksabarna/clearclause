@@ -166,11 +166,11 @@ describe('POST /api/analyze', () => {
     expect(res.body.code).toBe('EXTRACTED_TEXT_TOO_LARGE');
   });
 
-  it('rejects a JSON body with no text', async () => {
+  it('rejects a JSON body with no text as an empty document', async () => {
     const { app } = makeApp();
     const res = await request(app).post('/api/analyze').send({});
-    expect(res.status).toBe(415);
-    expect(res.body.code).toBe('UNSUPPORTED_FILE_TYPE');
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('EMPTY_DOCUMENT');
   });
 
   it('rejects an upload whose magic bytes are not a document', async () => {
@@ -448,13 +448,13 @@ describe('POST /api/compare', () => {
     expect(res.body.code).toBe('EXTRACTED_TEXT_TOO_LARGE');
   });
 
-  it('rejects scanned-content JSON with 422 SCANNED_PDF', async () => {
+  it('rejects pasted text with too little content as an empty document', async () => {
     const { app } = makeApp();
     const res = await request(app)
       .post('/api/compare')
       .send({ documentA: 'x'.repeat(50), documentB: 'tiny' });
-    expect(res.status).toBe(422);
-    expect(res.body.code).toBe('SCANNED_PDF');
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('EMPTY_DOCUMENT');
   });
 });
 

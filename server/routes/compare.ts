@@ -9,7 +9,13 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import multer from 'multer';
 import { fileTypeFromBuffer } from 'file-type';
 import { loadConfig } from '../config';
-import { unsupportedFileType, scannedPdf, extractedTextTooLarge, AppError } from '../errors';
+import {
+  unsupportedFileType,
+  scannedPdf,
+  extractedTextTooLarge,
+  emptyDocument,
+  AppError,
+} from '../errors';
 import { sanitizeText, isMeaningful } from '../services/sanitize';
 import { extractText } from '../services/extractText';
 import { alignAndDiff } from '../services/alignDiff';
@@ -70,7 +76,7 @@ export function createCompareRouter(overrides?: { config?: ReturnType<typeof loa
         }
 
         if (!isMeaningful(textA) || !isMeaningful(textB)) {
-          return next(scannedPdf());
+          return next(emptyDocument());
         }
         if (textA.length > config.maxExtractedChars || textB.length > config.maxExtractedChars) {
           return next(extractedTextTooLarge());

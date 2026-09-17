@@ -50,6 +50,7 @@
 - [x] `routes/checklist.ts` — `/api/checklist` + `/api/checklist/export` (global limiter only)
 - [x] `routes/compare.ts` — `/api/compare`, aiLimiter
 - [x] Injection-sanity check (log non-executing flag) for "ignore previous instructions" patterns (PRD-1 §7)
+- [x] Error-code consistency — `emptyDocument()` was defined/tested/client-anticipated but never emitted; now returned for empty or too-short **pasted text** (analyze + compare JSON) while unreadable **file** extraction stays `SCANNED_PDF`; `errorHandler` reuses `uploadTooLarge()` instead of duplicating it; `EMPTY_DOCUMENT` guidance added to IssuesScreen + smoke check
 
 ## Client — `client/`
 

@@ -228,6 +228,7 @@ describe('IssuesScreen', () => {
 
   it('renders guidance for each known intake code', () => {
     const cases = [
+      ['EMPTY_DOCUMENT', 'There was no text to analyze', 'Add document text'],
       ['UPLOAD_TOO_LARGE', 'Document exceeds the 5 MB limit', 'Upload smaller file'],
       ['UNSUPPORTED_FILE_TYPE', 'File format not supported', 'Try another format'],
       ['SCANNED_PDF', 'Text could not be extracted from this scan', 'Select readable document'],

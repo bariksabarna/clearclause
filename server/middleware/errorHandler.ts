@@ -6,7 +6,7 @@
  * included in logs (FR-15).
  */
 import type { NextFunction, Request, Response } from 'express';
-import { AppError } from '../errors';
+import { AppError, uploadTooLarge } from '../errors';
 
 /** Recognized multer error names (avoiding a direct multer import here). */
 const MULTER_LIMIT_FILE_SIZE = 'LIMIT_FILE_SIZE';
@@ -38,11 +38,7 @@ export function errorHandler(
     const multerError = err as { name?: string; code?: string };
     appError =
       multerError.code === MULTER_LIMIT_FILE_SIZE
-        ? new AppError(
-            'UPLOAD_TOO_LARGE',
-            413,
-            'This file is too large. Maximum upload size is 5 MB.'
-          )
+        ? uploadTooLarge()
         : new AppError(
             'INTERNAL_ERROR',
             400,

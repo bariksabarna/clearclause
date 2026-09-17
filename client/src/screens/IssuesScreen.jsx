@@ -1,6 +1,19 @@
 import { Link, useSearchParams } from 'react-router-dom';
 
 const GUIDANCE = {
+  EMPTY_DOCUMENT: {
+    case: 'Diagnostic Case 00 // Empty Payload',
+    title: 'There was no text to analyze',
+    icon: 'text_fields_off',
+    badgeText: 'No readable text received',
+    badgeTone: 'bg-surface-container-high text-on-surface-variant',
+    detail:
+      'The submission arrived without any readable text. Paste the document text, or upload a PDF or DOCX that contains selectable text.',
+    whatToDo:
+      'Paste the document text into the upload desk, or upload a PDF or DOCX with a selectable text layer.',
+    buttonLabel: 'Add document text',
+    buttonTo: '/',
+  },
   UPLOAD_TOO_LARGE: {
     case: 'Diagnostic Case 01 // Volume Threshold',
     title: 'Document exceeds the 5 MB limit',

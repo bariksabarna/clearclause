@@ -87,6 +87,17 @@ async function runChecks() {
     `status=${analyzed.status}`
   );
 
+  const emptyText = await fetch(`${base}/api/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: '' }),
+  });
+  check(
+    'empty pasted text returns 400 EMPTY_DOCUMENT',
+    emptyText.status === 400 && (await codeOf(emptyText)) === 'EMPTY_DOCUMENT',
+    `status=${emptyText.status}`
+  );
+
   const txtForm = new FormData();
   txtForm.append('document', new Blob(['plain text'], { type: 'text/plain' }), 'notes.txt');
   const txt = await fetch(`${base}/api/analyze`, { method: 'POST', body: txtForm });
