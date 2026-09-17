@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { SAMPLES, SAMPLE_BY_KEY, sampleByKey } from '../client/src/lib/samples.js';
 import { copyText } from '../client/src/lib/clipboard.js';
 import { scrollToClause } from '../client/src/lib/scrollTo.js';
+import { deriveOptions } from '../client/src/lib/options.js';
 
 describe('samples', () => {
   it('exposes three sample documents with the expected shape', () => {
@@ -84,5 +85,48 @@ describe('scrollToClause', () => {
     scrollToClause('ghost');
     expect(scrollSpy).not.toHaveBeenCalled();
     scrollSpy.mockRestore();
+  });
+});
+
+describe('deriveOptions', () => {
+  const clause = (id, tag, severity) => ({ id, tag, severity });
+
+  it('surfaces one entry per high-severity clause only', () => {
+    const result = deriveOptions([
+      clause('c1', 'Risk', 'High'),
+      clause('c2', 'Obligation', 'Medium'),
+      clause('c3', 'Right', 'Low'),
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0].clauseId).toBe('c1');
+    expect(result[0].options).toContain('Ask for this clause to be removed or narrowed.');
+  });
+
+  it('maps each known tag to its own options', () => {
+    const result = deriveOptions([
+      clause('c1', 'Risk', 'High'),
+      clause('c2', 'Obligation', 'High'),
+      clause('c3', 'Right', 'High'),
+      clause('c4', 'Standard', 'High'),
+    ]);
+    expect(result.map((entry) => entry.options[0])).toEqual([
+      'Ask for this clause to be removed or narrowed.',
+      'Ask whether this obligation can be capped or time-limited.',
+      'Confirm how this right is exercised and by when.',
+      'Ask the other party to justify why this term is needed.',
+    ]);
+  });
+
+  it('falls back to neutral options for an unrecognised tag', () => {
+    const result = deriveOptions([clause('c1', 'Non-Compete', 'High')]);
+    expect(result[0].options).toEqual([
+      'Note this clause and ask what it would take to change it.',
+      'Ask your lawyer how this clause affects the rest of the agreement.',
+    ]);
+  });
+
+  it('returns an empty list when nothing is high severity', () => {
+    expect(deriveOptions([clause('c1', 'Risk', 'Low')])).toEqual([]);
+    expect(deriveOptions([])).toEqual([]);
   });
 });

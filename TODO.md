@@ -65,6 +65,7 @@
 - [x] Client-side rate-limit/SSE handling — `lib/api.js` (`streamAnalyze`/`consumeSse`, backoff-friendly `ApiError.retryAfterMs`) + `AnalyzingScreen` restart guard (`cancelled`/`startedRef`)
 - [x] A11y — Skip link (`#main-content`), single `<h1>`/screen, `role="status"`/`role="alert"` regions, keyboard-operable dropzone, focus states, `aria-busy`/`aria-live` streaming regions
 - [x] FR-1 alignment — file picker/sample copy accept PDF/DOCX only; plain text is paste-only (removed the `TXT` upload affordance the server rejects with 415)
+- [x] "What are my options" panel (PRD-1 §3/§4 Should-have) — `lib/options.js` derives non-advisory options per High-severity clause; rendered in the Analysis right column with pin-to-clause, hidden when no High clauses
 
 ## Tests — `tests/` (rubric: validation just as important as coverage)
 
@@ -74,7 +75,7 @@
 - [x] Integration: chat with-answer / without-answer / injection-style question
 - [x] Integration: FR-12 no-persistence + FR-15 no-document-text-in-logs
 - [x] Integration: export endpoint produces a download
-- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **379 tests across 27 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
+- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **385 tests across 27 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
 - [x] `jest-axe` pass; zero critical violations (nested-interactive in UploadDropzone fixed)
 - [x] Seed check: `tests/samples.test.ts` (demo docs still trigger their intended inconsistencies)
 - [x] Full UI suite runs green under `CI=true` (`npm run test:coverage` = 100/100/100/100)
@@ -85,7 +86,14 @@
 - [x] Sample docs for demo (job offer, lease, ToS) with seeded inconsistency — `samples/*.txt`, mirrored by the Home sample chips; `tests/samples.test.ts` asserts each seeded conflict fires through `findInconsistencies`
 - [x] Local production smoke test (`npm start`): SPA `200`, SPA fallback `200`, unknown API `404` JSON, oversized upload `413`, `.txt` upload `415` (FR-1), AI-without-key graceful SSE error — no crash, no document text logged
 - [ ] Deploy (Cloud Run/Vercel), live smoke test of upload → summary → chat → checklist — blocked: no `docker`/`gh`/cloud credentials in this environment
-- [ ] Walk every traceability-matrix row (PRD-1 §3) against the live URL
+- [~] Walk every traceability-matrix row (PRD-1 §3) against the live URL — **local code walk done** (evidence below); re-run against the deployed URL once deploy lands
+  - [x] Plain-language summary (Must) — `routes/analyze.ts` SSE `summary`; `AnalysisScreen` header; `server.routes.test.ts`
+  - [x] Clause tagging + red-flag detector (Must) — `clauseTagger.ts`, `inconsistencyChecker.ts`, `ClauseBadge`; `clauseTagger`/`inconsistency` tests
+  - [x] Grounded Q&A with clause citations (Must) — `routes/chat.ts`, `ChatPanel`; `server.routes.test.ts`, `client.screens.analysis.test.jsx`
+  - [x] "What are my options" panel (Should) — `lib/options.js` + Analysis panel; `client.libs`/`client.screens.analysis` tests _(was the only gap)_
+  - [x] One-click checklist generator (Must) — `services/checklist.ts`, `routes/checklist.ts`, `ChecklistScreen`; `server.checklist.test.ts`
+  - [x] Lawyer-prep questions export PDF/text (Must) — `deriveLawyerQuestions`, `/api/checklist/export`; `server.export.test.ts`
+  - [x] Compare tab clause-level diff (Should) — `alignDiff.ts`, `routes/compare.ts`, `CompareScreen`; `server.alignDiff.test.ts`
 - [~] Repo public, single branch, < 10 MB; README states vertical/approach/assumptions — **local git done** (`main`, initial commit `0b5aa86`, 99 files / 940 KB tracked, `.env`/`node_modules`/`dist`/`coverage` ignored, no secrets); making it public needs a remote + `gh`/credentials
 
 ---

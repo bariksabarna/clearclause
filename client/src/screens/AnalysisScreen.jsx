@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSession } from '../store/session.jsx';
 import { scrollToClause } from '../lib/scrollTo.js';
+import { deriveOptions } from '../lib/options.js';
 import DisclaimerBar from '../components/DisclaimerBar.jsx';
 import DocumentPane from '../components/DocumentPane.jsx';
 import ClauseBadge from '../components/ClauseBadge.jsx';
@@ -30,6 +31,8 @@ export default function AnalysisScreen() {
     () => (filter === 'all' ? clauses : clauses.filter((clause) => clause.severity === filter)),
     [clauses, filter]
   );
+
+  const options = useMemo(() => deriveOptions(clauses), [clauses]);
 
   if (clauses.length === 0) {
     return (
@@ -165,6 +168,47 @@ export default function AnalysisScreen() {
             <DocumentPane clauses={clauses} title={state.fileName ?? 'Document'} />
           </div>
           <div className="flex flex-col gap-4 lg:col-span-5">
+            {options.length > 0 && (
+              <section
+                aria-labelledby="options-heading"
+                className="bg-surface-container-lowest p-4 shadow-sm"
+              >
+                <h2
+                  id="options-heading"
+                  className="flex items-center gap-1 font-label-sm text-label-sm font-bold uppercase tracking-wider text-secondary"
+                >
+                  <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+                    checklist
+                  </span>
+                  What are my options
+                </h2>
+                <p className="mt-1 font-body-sm text-body-sm text-secondary">
+                  Plain-language moves to consider for the highest-risk clauses. Informational only
+                  — not legal advice.
+                </p>
+                <ul className="mt-3 space-y-3">
+                  {options.map((entry) => (
+                    <li key={entry.clauseId}>
+                      <button
+                        type="button"
+                        onClick={() => scrollToClause(entry.clauseId)}
+                        className="flex items-center gap-1 font-label-sm text-label-sm font-semibold text-primary transition-colors hover:text-primary-container"
+                      >
+                        <span aria-hidden="true" className="material-symbols-outlined text-[14px]">
+                          my_location
+                        </span>
+                        Clause {entry.clauseId.replace(/^c/, '')}
+                      </button>
+                      <ul className="mt-1 list-disc space-y-0.5 pl-5 font-body-sm text-body-sm text-on-surface">
+                        {entry.options.map((option) => (
+                          <li key={option}>{option}</li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             <div className="flex items-center justify-between bg-surface-container-high px-4 py-2 shadow-sm">
               <span className="flex items-center gap-1 font-label-sm text-label-sm font-bold uppercase tracking-wider text-secondary">
                 <span aria-hidden="true" className="material-symbols-outlined text-[16px]">

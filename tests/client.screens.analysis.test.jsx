@@ -99,6 +99,29 @@ describe('AnalysisScreen', () => {
     scrollIntoViewSpy.mockRestore();
   });
 
+  it('renders an options panel for high-risk clauses and pins from it', () => {
+    const scrollIntoViewSpy = vi
+      .spyOn(Element.prototype, 'scrollIntoView')
+      .mockImplementation(() => {});
+    renderAt(<AnalysisScreen />, {
+      initial: stateWithClauses([high, low]),
+    });
+    expect(screen.getByRole('heading', { name: /What are my options/ })).toBeInTheDocument();
+    expect(
+      screen.getByText('Ask your lawyer how this clause affects the rest of the agreement.')
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clause 1' }));
+    expect(scrollIntoViewSpy).toHaveBeenCalled();
+    scrollIntoViewSpy.mockRestore();
+  });
+
+  it('hides the options panel when no clause is high severity', () => {
+    renderAt(<AnalysisScreen />, {
+      initial: stateWithClauses([medium, low]),
+    });
+    expect(screen.queryByRole('heading', { name: /What are my options/ })).toBeNull();
+  });
+
   it('falls back to Untitled document and a pending summary message', () => {
     renderAt(<AnalysisScreen />, {
       initial: stateWithClauses([medium], { fileName: null, summary: null }),
