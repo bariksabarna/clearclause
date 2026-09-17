@@ -68,7 +68,27 @@ npm run format:check      # Prettier
 npm start                 # serve dist/ + API from :8080
 ```
 
-`npm run smoke` boots `server/index.ts` on a throwaway port with no AI key and verifies SPA serving, SPA fallback, intake validation (413/415), graceful AI failure, and the deterministic checklist/export endpoints. Point it at a deployment with `SMOKE_BASE_URL=https://your-app npm run smoke`.
+`npm run smoke` boots `server/index.ts` on a throwaway port with no AI key and verifies SPA serving, SPA fallback, intake validation (413/415/400 empty document), graceful AI failure, and the deterministic checklist/export endpoints. Point it at a deployment with `SMOKE_BASE_URL=https://your-app npm run smoke`.
+
+## Deployment (Google Cloud Run)
+
+The target project must have billing enabled — Cloud Run, Cloud Build, and Artifact Registry all reject requests with `BILLING_DISABLED` otherwise.
+
+```bash
+gcloud run deploy clearclause \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars GEMINI_API_KEY=<key>,GEMINI_MODEL=gemini-2.0-flash
+```
+
+`--source .` builds the repo's `Dockerfile` on Cloud Build; the container serves the SPA from `dist/` and the `/api/*` routes, listening on the `$PORT` Cloud Run injects. Because the SPA and API are same-origin, `ALLOWED_ORIGINS` is only needed if you split them.
+
+Verify the live deployment with the same suite used locally:
+
+```bash
+SMOKE_BASE_URL=https://<service-url> npm run smoke
+```
 
 ## Environment variables
 
