@@ -6,7 +6,7 @@
  * /api/checklist/export: produces a downloadable text/PDF file (FR-8).
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { AppError } from '../errors';
+import { AppError, validationError } from '../errors';
 import { isChecklistRequest, isExportRequest } from '../../shared/dto/validators';
 import { deriveChecklist, deriveLawyerQuestions } from '../services/checklist';
 import { generateTxtExport, generatePdfExport } from '../services/exportDoc';
@@ -17,9 +17,7 @@ export function createChecklistRouter() {
   router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isChecklistRequest(req.body)) {
-        return next(
-          new AppError('INTERNAL_ERROR', 400, 'Please provide a non-empty list of tagged clauses.')
-        );
+        return next(validationError('Please provide a non-empty list of tagged clauses.'));
       }
       const checklist = deriveChecklist(req.body.clauses);
       const lawyerQuestions = deriveLawyerQuestions(req.body.clauses);
@@ -33,11 +31,7 @@ export function createChecklistRouter() {
     try {
       if (!isExportRequest(req.body)) {
         return next(
-          new AppError(
-            'INTERNAL_ERROR',
-            400,
-            'Provide checklist items, lawyer questions, and a format (txt or pdf).'
-          )
+          validationError('Provide checklist items, lawyer questions, and a format (txt or pdf).')
         );
       }
 

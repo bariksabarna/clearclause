@@ -98,6 +98,7 @@ SMOKE_BASE_URL=https://<service-url> npm run smoke
 | `GEMINI_MODEL`          | Gemini model id (default `gemini-2.0-flash`, locked at build time) |
 | `PORT`                  | Server port (default 8080)                                         |
 | `ALLOWED_ORIGINS`       | Comma-separated CORS whitelist                                     |
+| `TRUST_PROXY`           | `true` behind a reverse proxy so rate limits use the client IP     |
 | `RATE_LIMIT_WINDOW_MS`  | Rate-limit window                                                  |
 | `RATE_LIMIT_MAX_GLOBAL` | Global request cap per window                                      |
 | `RATE_LIMIT_MAX_AI`     | AI-endpoint cap per window                                         |

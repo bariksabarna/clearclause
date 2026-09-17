@@ -264,7 +264,7 @@ describe('POST /api/chat', () => {
     const { app } = makeApp();
     const res = await request(app).post('/api/chat').send({});
     expect(res.status).toBe(400);
-    expect(res.body.code).toBe('INTERNAL_ERROR');
+    expect(res.body.code).toBe('VALIDATION_ERROR');
   });
 
   it('returns 503 when the provider fails', async () => {
@@ -324,7 +324,7 @@ describe('POST /api/checklist', () => {
     const { app } = makeApp();
     const res = await request(app).post('/api/checklist').send({ clauses: [] });
     expect(res.status).toBe(400);
-    expect(res.body.code).toBe('INTERNAL_ERROR');
+    expect(res.body.code).toBe('VALIDATION_ERROR');
   });
 });
 
@@ -537,6 +537,13 @@ describe('app assembly', () => {
     const { app } = makeApp();
     const res = await request(app).get('/index.html');
     expect(res.status).toBe(200);
+  });
+
+  it('trusts the first proxy hop only when configured', () => {
+    const trusted = createApp({ config: loadConfig({ ...ENV, TRUST_PROXY: 'true' }) });
+    const untrusted = createApp({ config: loadConfig(ENV) });
+    expect(trusted.get('trust proxy')).toBe(1);
+    expect(untrusted.get('trust proxy')).toBe(false);
   });
 
   it('builds apps and router factories from ambient configuration when no overrides are given', () => {

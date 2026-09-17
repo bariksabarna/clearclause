@@ -36,7 +36,7 @@
 ## Server — `server/`
 
 - [x] `index.ts` — Express, Helmet (strict CSP), global + AI rate limiters, CORS whitelist, compression-first, error-handling middleware, never log document text
-- [x] `middleware/validateUpload.ts` — size ceiling + magic-byte check via `file-type` (FR-1, FR-17)
+- [x] `services/fileSignature.ts` — shared magic-byte check via `file-type`; multer enforces the size ceiling (FR-1, FR-17)
 - [x] `services/extractText.ts` — `pdf-parse@2` / `mammoth`; detect near-empty → "can't read scanned file" (FR-2)
 - [x] `services/sanitize.ts` — charCode-based control-char strip + char ceiling 200k (FR-18)
 - [x] `services/clauseTagger.ts` — severity scoring + keyword flags, hash-cached LLM tags + deterministic severity overrides (FR-4, NFE)
@@ -76,7 +76,7 @@
 - [x] Integration: chat with-answer / without-answer / injection-style question
 - [x] Integration: FR-12 no-persistence + FR-15 no-document-text-in-logs
 - [x] Integration: export endpoint produces a download
-- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **398 tests across 27 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
+- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **402 tests across 28 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
 - [x] `jest-axe` pass; zero critical violations (nested-interactive in UploadDropzone fixed)
 - [x] Seed check: `tests/samples.test.ts` (demo docs still trigger their intended inconsistencies)
 - [x] Full UI suite runs green under `CI=true` (`npm run test:coverage` = 100/100/100/100)
@@ -106,7 +106,8 @@ Two independent read-only audits of `server/` and `client/` surfaced real defect
 - [x] Client: analyze fetch now uses an `AbortSignal` so "Abort Inspection" cancels the request; SSE `error` events propagate their `code` (intake guidance restored); `consumeSse` tolerates CRLF; checklist duplicate-key collisions fixed; clipboard failure shows a fallback toast; custom-item input labelled; "Jump to Highest Risk" disabled when no High clause; margin card is actually clickable
 - [x] `EMPTY_DOCUMENT` is now reachable for empty/too-short **pasted text** (was `UNSUPPORTED_FILE_TYPE`/silent); `AI_TIMEOUT` dead code removed; Dockerfile installs prod deps before `USER node`
 - [x] `inconsistencyChecker` currency slots now compare on a canonical cents key, so `$500` and `$500.00` are the same value while the original spelling is preserved in the explanation (no more false positives)
-- [ ] Known low-priority hardening (not blocking; documented, not yet fixed): `trust proxy` unset; DOCX zip-bomb not bounded; analyze/chat map unexpected errors to `AI_UNREACHABLE`; chat validation returns `INTERNAL_ERROR` on a 400; SSE backpressure/disconnect handling; summary built from whole-doc text; `generatePdfExport` has no `'error'` listener; `validateUpload` is dead middleware
+- [x] Hardening pass 2: validation failures now return a dedicated `VALIDATION_ERROR` 400 (chat, compare, checklist + export) instead of `INTERNAL_ERROR`; `generatePdfExport` routes PDFKit stream errors through `flushPdf` so a write failure rejects instead of hanging/uncaught; duplicated magic-byte logic collapsed into `services/fileSignature.ts` and the dead `validateUpload` middleware deleted; `TRUST_PROXY` config sets Express `trust proxy` for deployments behind a load balancer
+- [ ] Known low-priority hardening (not blocking; documented, not yet fixed): DOCX zip-bomb not bounded; analyze/chat still map unexpected errors to `AI_UNREACHABLE`; SSE backpressure/disconnect handling; plain-language summary built from the whole document rather than the chunked pass
 
 ---
 

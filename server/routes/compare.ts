@@ -7,24 +7,20 @@
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import multer from 'multer';
-import { fileTypeFromBuffer } from 'file-type';
 import { loadConfig } from '../config';
 import {
   unsupportedFileType,
   scannedPdf,
   extractedTextTooLarge,
   emptyDocument,
+  validationError,
   AppError,
 } from '../errors';
 import { sanitizeText, isMeaningful } from '../services/sanitize';
+import { detectSupportedMime } from '../services/fileSignature';
 import { extractText } from '../services/extractText';
 import { alignAndDiff } from '../services/alignDiff';
 import { isCompareRequest } from '../../shared/dto/validators';
-
-const ALLOWED_MIMES = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-]);
 
 export function createCompareRouter(overrides?: { config?: ReturnType<typeof loadConfig> }) {
   const config = overrides?.config ?? loadConfig();
@@ -50,16 +46,11 @@ export function createCompareRouter(overrides?: { config?: ReturnType<typeof loa
           // Multipart upload path
           for (let i = 0; i < 2; i += 1) {
             const file = req.files[i];
-            let detected;
-            try {
-              detected = await fileTypeFromBuffer(file.buffer);
-            } catch {
-              detected = undefined;
-            }
-            if (!detected || !ALLOWED_MIMES.has(detected.mime)) {
+            const mime = await detectSupportedMime(file.buffer);
+            if (!mime) {
               return next(unsupportedFileType());
             }
-            const text = await extractText(detected.mime, file.buffer);
+            const text = await extractText(mime, file.buffer);
             const sanitised = sanitizeText(text, config.maxExtractedChars + 1);
             if (!isMeaningful(sanitised)) return next(scannedPdf());
             if (i === 0) textA = sanitised;
@@ -67,9 +58,7 @@ export function createCompareRouter(overrides?: { config?: ReturnType<typeof loa
           }
         } else {
           return next(
-            new AppError(
-              'INTERNAL_ERROR',
-              400,
+            validationError(
               'Provide two document texts as JSON { documentA, documentB } or two uploaded files.'
             )
           );

@@ -40,6 +40,8 @@ export interface ServerConfig {
   chunkOverlapWords: number;
   /** Rate-limiting settings. */
   rateLimit: RateLimitConfig;
+  /** Trust the first reverse-proxy hop so rate limits key on the real client IP. */
+  trustProxy: boolean;
 }
 
 /** Parse a positive integer environment value with a fallback default. */
@@ -85,6 +87,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
       maxGlobal: toPositiveInt(env.RATE_LIMIT_MAX_GLOBAL, 200, 'RATE_LIMIT_MAX_GLOBAL'),
       maxAi: toPositiveInt(env.RATE_LIMIT_MAX_AI, 20, 'RATE_LIMIT_MAX_AI'),
     },
+    trustProxy: env.TRUST_PROXY === 'true',
   };
   if (config.chunkOverlapWords >= config.chunkThresholdWords) {
     throw new Error('CHUNK_OVERLAP_WORDS must be smaller than CHUNK_THRESHOLD_WORDS.');

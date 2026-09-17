@@ -15,6 +15,7 @@ export type ErrorCode =
   | 'EXTRACTED_TEXT_TOO_LARGE'
   | 'RATE_LIMITED'
   | 'AI_UNREACHABLE'
+  | 'VALIDATION_ERROR'
   | 'BODY_TOO_LARGE'
   | 'NOT_FOUND'
   | 'INTERNAL_ERROR';
@@ -50,6 +51,11 @@ export class AppError extends Error {
       ...(this.retryAfterMs !== undefined ? { retryAfterMs: this.retryAfterMs } : {}),
     };
   }
+}
+
+/** Request body or parameters failed validation (FR-1). */
+export function validationError(message: string): AppError {
+  return new AppError('VALIDATION_ERROR', 400, message);
 }
 
 /** Upload exceeds the configured size ceiling (FR-1). */

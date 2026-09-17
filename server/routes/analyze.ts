@@ -7,7 +7,6 @@
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import multer from 'multer';
-import { fileTypeFromBuffer } from 'file-type';
 import { loadConfig } from '../config';
 import {
   scannedPdf,
@@ -17,6 +16,7 @@ import {
   AppError,
 } from '../errors';
 import { sanitizeText, isMeaningful, detectInjectionFlag } from '../services/sanitize';
+import { detectSupportedMime } from '../services/fileSignature';
 import { extractText } from '../services/extractText';
 import { needsChunking, chunkText, mergeChunkResults } from '../services/chunker';
 import { calculateSeverity, severityReasonFor, createContentHash } from '../services/clauseTagger';
@@ -35,12 +35,6 @@ const sendSse = (res: Response, event: string, data: unknown): void => {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 };
 
-/** Mime types allowed by the magic-byte check. */
-const ALLOWED_MIMES = [
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-];
-
 export function createAnalyzeRouter(overrides?: {
   config?: ReturnType<typeof loadConfig>;
   llmRequest?: typeof requestText;
@@ -53,8 +47,6 @@ export function createAnalyzeRouter(overrides?: {
     limits: { fileSize: config.maxUploadBytes },
   });
 
-  const ALLOWED_MIMES_SET = new Set(ALLOWED_MIMES);
-
   router.post(
     '/',
     upload.single('document'),
@@ -63,16 +55,11 @@ export function createAnalyzeRouter(overrides?: {
         let rawText = '';
 
         if (req.file) {
-          let detected;
-          try {
-            detected = await fileTypeFromBuffer(req.file.buffer);
-          } catch {
-            detected = undefined;
-          }
-          if (!detected || !ALLOWED_MIMES_SET.has(detected.mime)) {
+          const mime = await detectSupportedMime(req.file.buffer);
+          if (!mime) {
             return next(unsupportedFileType());
           }
-          rawText = await extractText(detected.mime, req.file.buffer);
+          rawText = await extractText(mime, req.file.buffer);
         } else {
           rawText = typeof req.body?.text === 'string' ? req.body.text : '';
         }

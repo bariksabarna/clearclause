@@ -1,7 +1,25 @@
 // @vitest-environment node
+import { EventEmitter } from 'node:events';
 import { describe, expect, it } from 'vitest';
 import { PDFParse } from 'pdf-parse';
-import { generatePdfExport, generateTxtExport } from '../server/services/exportDoc';
+import { flushPdf, generatePdfExport, generateTxtExport } from '../server/services/exportDoc';
+
+describe('flushPdf', () => {
+  it('resolves when the document flushes', async () => {
+    const doc = new EventEmitter();
+    const promise = flushPdf(doc);
+    doc.emit('end');
+    await expect(promise).resolves.toBeUndefined();
+  });
+
+  it('rejects when the document stream errors', async () => {
+    const doc = new EventEmitter();
+    const promise = flushPdf(doc);
+    const failure = new Error('write failed');
+    doc.emit('error', failure);
+    await expect(promise).rejects.toBe(failure);
+  });
+});
 
 describe('generateTxtExport', () => {
   it('builds a numbered, sectioned plain-text document', () => {

@@ -9,6 +9,7 @@ import {
   scannedPdf,
   unsupportedFileType,
   uploadTooLarge,
+  validationError,
 } from '../server/errors';
 
 describe('config.toPositiveInt', () => {
@@ -66,6 +67,7 @@ describe('config.loadConfig', () => {
     expect(config.chunkThresholdWords).toBe(12_000);
     expect(config.chunkOverlapWords).toBe(200);
     expect(config.rateLimit).toEqual({ windowMs: 60_000, maxGlobal: 200, maxAi: 20 });
+    expect(config.trustProxy).toBe(false);
   });
 
   it('overrides every value from the environment', () => {
@@ -93,6 +95,11 @@ describe('config.loadConfig', () => {
     expect(config.chunkThresholdWords).toBe(50);
     expect(config.chunkOverlapWords).toBe(5);
     expect(config.rateLimit).toEqual({ windowMs: 1000, maxGlobal: 10, maxAi: 2 });
+  });
+
+  it('enables proxy trust only for the exact string "true"', () => {
+    expect(loadConfig({ TRUST_PROXY: 'true' }).trustProxy).toBe(true);
+    expect(loadConfig({ TRUST_PROXY: '1' }).trustProxy).toBe(false);
   });
 
   it('rejects an overlap greater than or equal to the chunk threshold', () => {
@@ -146,6 +153,9 @@ describe('errors', () => {
     expect(extractedTextTooLarge().status).toBe(413);
     expect(aiUnreachable().code).toBe('AI_UNREACHABLE');
     expect(aiUnreachable().status).toBe(503);
+    expect(validationError('Bad body.').code).toBe('VALIDATION_ERROR');
+    expect(validationError('Bad body.').status).toBe(400);
+    expect(validationError('Bad body.').message).toBe('Bad body.');
     const limited = rateLimited(30000);
     expect(limited.code).toBe('RATE_LIMITED');
     expect(limited.status).toBe(429);

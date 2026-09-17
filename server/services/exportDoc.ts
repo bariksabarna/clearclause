@@ -7,6 +7,25 @@
  */
 import PDFDocument from 'pdfkit';
 
+/** Minimal event-emitter shape PDFKit documents satisfy (keeps tests mockable). */
+export interface PdfStream {
+  on(event: 'end', listener: () => void): unknown;
+  on(event: 'error', listener: (error: Error) => void): unknown;
+}
+
+/**
+ * Wait for a PDFKit document to flush, surfacing stream errors as rejections.
+ *
+ * @param doc - The PDFKit document being written.
+ * @returns A Promise that resolves on `end` and rejects on `error`.
+ */
+export function flushPdf(doc: PdfStream): Promise<void> {
+  return new Promise((resolve, reject) => {
+    doc.on('end', () => resolve());
+    doc.on('error', (error: Error) => reject(error));
+  });
+}
+
 /**
  * Generate a plain-text export.
  *
@@ -48,9 +67,7 @@ export async function generatePdfExport(
   const doc = new PDFDocument({ margin: 50 });
 
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-  const flushed = new Promise<void>((resolve) => {
-    doc.on('end', () => resolve());
-  });
+  const flushed = flushPdf(doc);
 
   doc.fontSize(20).font('Helvetica-Bold').text('ClearClause — Legal Document Checklist');
   doc

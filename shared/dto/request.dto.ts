@@ -14,7 +14,8 @@ import type { ExportFormat } from './enums';
  *
  * A multipart file upload carries the document as a binary field (`document`)
  * and sends no JSON body; the server validates that file by magic bytes
- * (FR-17) and size ceiling (FR-1) in the `validateUpload` middleware.
+ * (FR-17) and enforces the size ceiling (FR-1) via `services/fileSignature.ts`
+ * and multer's `fileSize` limit.
  */
 export interface AnalyzeRequestDto {
   /** Pasted document text to analyze. Required — must be non-empty after sanitisation. */

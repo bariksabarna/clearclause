@@ -8,17 +8,9 @@ import {
   buildGlobalLimiter,
   retryAfterFrom,
 } from '../server/middleware/rateLimiter';
-import { validateUpload } from '../server/middleware/validateUpload';
 import { errorHandler } from '../server/middleware/errorHandler';
-import { AppError, rateLimited, unsupportedFileType } from '../server/errors';
+import { AppError, rateLimited } from '../server/errors';
 import { loadConfig } from '../server/config';
-
-vi.mock('file-type', () => ({
-  fileTypeFromBuffer: vi.fn(),
-}));
-
-import { fileTypeFromBuffer } from 'file-type';
-const fileTypeMock = vi.mocked(fileTypeFromBuffer);
 
 describe('applySecurity (helmet + cors)', () => {
   it('sets strict security headers for whitelisted origins', async () => {
@@ -78,58 +70,6 @@ describe('rate limiters', () => {
   it('retryAfterFrom falls back to the window for missing or non-string headers', () => {
     expect(retryAfterFrom({ getHeader: () => undefined }, 30_000)).toBe(30_000);
     expect(retryAfterFrom({ getHeader: () => 5 }, 30_000)).toBe(30_000);
-  });
-});
-
-describe('validateUpload', () => {
-  beforeEach(() => {
-    fileTypeMock.mockReset();
-  });
-
-  const next = vi.fn();
-
-  it('passes valid PDF magic bytes', async () => {
-    const req = { file: { buffer: Buffer.from('some-bytes') } } as unknown as Request;
-    fileTypeMock.mockResolvedValue({ mime: 'application/pdf', ext: 'pdf' });
-    await validateUpload(req, {} as Response, next);
-    expect(next).toHaveBeenCalledWith();
-  });
-
-  it('passes valid DOCX magic bytes', async () => {
-    const req = { file: { buffer: Buffer.from('some-bytes') } } as unknown as Request;
-    fileTypeMock.mockResolvedValue({
-      mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ext: 'docx',
-    });
-    await validateUpload(req, {} as Response, next);
-    expect(next).toHaveBeenCalledWith();
-  });
-
-  it('rejects a file that is not a supported document', async () => {
-    const req = { file: { buffer: Buffer.from('MZ fake') } } as unknown as Request;
-    fileTypeMock.mockResolvedValue({ mime: 'application/x-dosexec', ext: 'exe' });
-    await validateUpload(req, {} as Response, next);
-    expect(next).toHaveBeenCalledWith(unsupportedFileType());
-  });
-
-  it('rejects an undetectable or missing-signature file', async () => {
-    const req = { file: { buffer: Buffer.from('???') } } as unknown as Request;
-    fileTypeMock.mockResolvedValue(undefined);
-    await validateUpload(req, {} as Response, next);
-    expect(next).toHaveBeenCalledWith(unsupportedFileType());
-  });
-
-  it('rejects when the magic-byte reader itself throws', async () => {
-    const req = { file: { buffer: Buffer.from('???') } } as unknown as Request;
-    fileTypeMock.mockRejectedValue(new Error('bad'));
-    await validateUpload(req, {} as Response, next);
-    expect(next).toHaveBeenCalledWith(unsupportedFileType());
-  });
-
-  it('rejects a request with no uploaded file', async () => {
-    const req = {} as Request;
-    await validateUpload(req, {} as Response, next);
-    expect(next).toHaveBeenCalledWith(unsupportedFileType());
   });
 });
 

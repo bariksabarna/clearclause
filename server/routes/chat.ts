@@ -8,7 +8,7 @@
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { loadConfig } from '../config';
-import { AppError } from '../errors';
+import { AppError, validationError } from '../errors';
 import { isChatRequest } from '../../shared/dto/validators';
 import {
   buildChatPrompt,
@@ -32,11 +32,7 @@ export function createChatRouter(overrides?: {
 
       if (!isChatRequest(body)) {
         return next(
-          new AppError(
-            'INTERNAL_ERROR',
-            400,
-            'Please provide a valid question with document text (sessionText).'
-          )
+          validationError('Please provide a valid question with document text (sessionText).')
         );
       }
 

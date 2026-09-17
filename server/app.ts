@@ -31,6 +31,10 @@ export function createApp(overrides?: { config?: ServerConfig }) {
   const config = overrides?.config ?? loadConfig();
   const app = express();
 
+  if (config.trustProxy) {
+    app.set('trust proxy', 1);
+  }
+
   applySecurity(app, config);
   app.use(compression());
   app.use(express.json({ limit: '2mb' }));
