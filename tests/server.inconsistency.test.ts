@@ -66,6 +66,26 @@ describe('findInconsistencies', () => {
     expect(result[0].explanation).toContain('c1 ($1,234.56) vs c2 ($2,000.00)');
   });
 
+  it('treats equivalent currency spellings as the same value', () => {
+    const result = findInconsistencies([
+      clause('c1', 'Deposit of $500 due up front.'),
+      clause('c2', 'Deposit of $500.00 due later.'),
+      clause('c3', 'Deposit of $1,000.00 due at signing.'),
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0].explanation).toContain('c1 ($500)');
+    expect(result[0].explanation).toContain('c2 ($500.00)');
+    expect(result[0].explanation).toContain('c3 ($1,000.00)');
+  });
+
+  it('does not flag a document where only one currency value is written two ways', () => {
+    const result = findInconsistencies([
+      clause('c1', 'Deposit of $500 is required.'),
+      clause('c2', 'The deposit of $500.00 is refundable.'),
+    ]);
+    expect(result).toEqual([]);
+  });
+
   it('dedupes repeated identical values within one clause', () => {
     const result = findInconsistencies([
       clause('c1', 'Pay $500 rent and return the $500 deposit.'),

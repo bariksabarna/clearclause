@@ -16,6 +16,8 @@ interface ExtractedSlot {
   clauseId: string;
   category: SlotCategory;
   rawValue: string;
+  /** Canonical comparison key; currency amounts collapse `$500` and `$500.00`. */
+  key: string;
 }
 
 const DURATION_RE = /\b(\d+)\s+(days?|months?|years?)\b/gi;
@@ -36,7 +38,7 @@ function extractDurations(clauseId: string, text: string): ExtractedSlot[] {
     const unit = (
       group === 'days' || group === 'months' || group === 'years' ? group : `${group}s`
     ) as 'days' | 'months' | 'years';
-    hits.push({ clauseId, category: unit, rawValue: value });
+    hits.push({ clauseId, category: unit, rawValue: value, key: value });
   }
   return hits;
 }
@@ -51,7 +53,9 @@ function extractDurations(clauseId: string, text: string): ExtractedSlot[] {
 function extractCurrencies(clauseId: string, text: string): ExtractedSlot[] {
   const hits: ExtractedSlot[] = [];
   for (const match of text.matchAll(CURRENCY_RE)) {
-    hits.push({ clauseId, category: 'currency', rawValue: `$${match[1]}` });
+    const amount = parseFloat(match[1].replace(/,/g, ''));
+    const key = String(Math.round(amount * 100));
+    hits.push({ clauseId, category: 'currency', rawValue: `$${match[1]}`, key });
   }
   return hits;
 }
@@ -91,15 +95,20 @@ export function findInconsistencies(clauses: ClauseDto[]): InconsistencyDto[] {
 
   const inconsistencies: InconsistencyDto[] = [];
   for (const [category, slots] of byCategory.entries()) {
-    const uniqueValues = new Set(slots.map((s) => s.rawValue));
+    const uniqueValues = new Set(slots.map((s) => s.key));
     if (uniqueValues.size <= 1) continue;
 
     const clauseIds = [...new Set(slots.map((s) => s.clauseId))];
     if (clauseIds.length < 2) continue;
 
+    const seenByClause = new Map<string, Set<string>>();
     const perClause = slots.reduce<Record<string, string[]>>((acc, s) => {
-      acc[s.clauseId] = acc[s.clauseId] ?? [];
-      if (!acc[s.clauseId].includes(s.rawValue)) acc[s.clauseId].push(s.rawValue);
+      const seen = seenByClause.get(s.clauseId) ?? new Set<string>();
+      seenByClause.set(s.clauseId, seen);
+      if (!seen.has(s.key)) {
+        seen.add(s.key);
+        (acc[s.clauseId] = acc[s.clauseId] ?? []).push(s.rawValue);
+      }
       return acc;
     }, {});
     const phrases = Object.entries(perClause)
