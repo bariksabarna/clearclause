@@ -1,0 +1,107 @@
+@import 'tailwindcss';
+
+/* ClearClause design tokens — Archival Legal Markup system.
+ * Palette tuned around bond paper, archival ink, and marking inks. */
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+
+  --color-surface: #f8faf7;
+  --color-surface-dim: #d8dbd8;
+  --color-surface-bright: #f8faf7;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f1;
+  --color-surface-container: #eceeeb;
+  --color-surface-container-high: #e7e9e6;
+  --color-surface-container-highest: #e1e3e0;
+  --color-surface-variant: #e1e3e0;
+  --color-background: #f8faf7;
+  --color-on-background: #191c1b;
+  --color-on-surface: #191c1b;
+  --color-on-surface-variant: #45464d;
+  --color-inverse-surface: #2e312f;
+  --color-inverse-on-surface: #eff1ee;
+  --color-outline: #76777e;
+  --color-outline-variant: #c6c6ce;
+  --color-surface-tint: #535e7a;
+
+  --color-primary: #020b24;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #17223b;
+  --color-on-primary-container: #7f89a8;
+  --color-inverse-primary: #bbc6e7;
+
+  --color-secondary: #565f6b;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d7e0ee;
+  --color-on-secondary-container: #5a636f;
+
+  --color-tertiary: #745b00;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #d1a600;
+  --color-on-tertiary-container: #4f3e00;
+  --color-tertiary-fixed: #ffe08b;
+  --color-on-tertiary-fixed: #241a00;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Risk semantic set — never conveyed by color alone in the UI. */
+  --color-risk-high: #b23a2e;
+  --color-risk-medium: #c77d22;
+  --color-risk-safe: #3f7a5d;
+
+  /* Typographic scale: Source Serif 4 for prose, IBM Plex Sans for chrome. */
+  --text-headline-xl: 36px;
+  --text-headline-xl--line-height: 44px;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-md: 22px;
+  --text-headline-md--line-height: 30px;
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 26px;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 30px;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 26px;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 22px;
+  --text-doc-clause: 15px;
+  --text-doc-clause--line-height: 26px;
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 20px;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-code-mono: 12px;
+  --text-code-mono--line-height: 18px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+    overscroll-behavior: none;
+  }
+
+  button,
+  a,
+  input,
+  [tabindex] {
+    border-radius: 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

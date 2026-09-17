@@ -1,0 +1,15 @@
+Software as a Service Terms of Service
+
+1. Acceptance. By creating an account you agree to these Terms of Service.
+
+2. Service. We provide a cloud-based subscription service. We may change, suspend, or discontinue any feature of the Service at any time without notice.
+
+3. Payment. Subscription fees are billed in advance and are non-refundable except where required by law. Unused portions of a subscription are not credited. The current rate is $49 per user per month and may change in the next billing cycle without notice.
+
+4. Termination. We may terminate or suspend your access immediately, without notice or liability, for any reason whatsoever, including without limitation a breach of these Terms.
+
+5. Automatic Renewal. Unless you cancel at least thirty (30) days before the end of your subscription period, your subscription will auto-renew at the then-current rate.
+
+6. Limitation of Liability. In no event shall we be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, even if advised of the possibility of such damages. Our total liability shall not exceed the amount you paid us in the six (6) months preceding the claim, but in no event more than $500.
+
+7. Data Deletion. Upon termination, we may delete your account data permanently and are not obligated to export or return it.

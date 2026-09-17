@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.env
+.git
+.gitignore
+tests/
+Dockerfile
+.dockerignore
+README.md
+*.log
+.DS_Store
