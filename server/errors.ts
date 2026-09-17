@@ -15,7 +15,6 @@ export type ErrorCode =
   | 'EXTRACTED_TEXT_TOO_LARGE'
   | 'RATE_LIMITED'
   | 'AI_UNREACHABLE'
-  | 'AI_TIMEOUT'
   | 'BODY_TOO_LARGE'
   | 'NOT_FOUND'
   | 'INTERNAL_ERROR';
