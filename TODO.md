@@ -76,7 +76,7 @@
 - [x] Integration: chat with-answer / without-answer / injection-style question
 - [x] Integration: FR-12 no-persistence + FR-15 no-document-text-in-logs
 - [x] Integration: export endpoint produces a download
-- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **417 tests across 29 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
+- [x] Component/screen suite: `client.store`, `client.api`, `client.libs`, `client.components`, `client.screens.*`, `App` routes/lazy-shell, `client.axe` — **422 tests across 29 files, 100% statements/branches/functions/lines**, lint/typecheck/format/build green
 - [x] `jest-axe` pass; zero critical violations (nested-interactive in UploadDropzone fixed)
 - [x] Seed check: `tests/samples.test.ts` (demo docs still trigger their intended inconsistencies)
 - [x] Full UI suite runs green under `CI=true` (`npm run test:coverage` = 100/100/100/100)
@@ -108,7 +108,8 @@ Two independent read-only audits of `server/` and `client/` surfaced real defect
 - [x] `inconsistencyChecker` currency slots now compare on a canonical cents key, so `$500` and `$500.00` are the same value while the original spelling is preserved in the explanation (no more false positives)
 - [x] Hardening pass 2: validation failures now return a dedicated `VALIDATION_ERROR` 400 (chat, compare, checklist + export) instead of `INTERNAL_ERROR`; `generatePdfExport` routes PDFKit stream errors through `flushPdf` so a write failure rejects instead of hanging/uncaught; duplicated magic-byte logic collapsed into `services/fileSignature.ts` and the dead `validateUpload` middleware deleted; `TRUST_PROXY` config sets Express `trust proxy` for deployments behind a load balancer
 - [x] Hardening pass 3: DOCX uploads are now bounds-checked against a zip bomb — `zipUncompressedSize` reads the ZIP central directory and `extractTextFromDocx` rejects malformed/ZIP64/over-50-MiB archives with `EXTRACTED_TEXT_TOO_LARGE` before any XML is parsed; `asAppError` preserves deliberate statuses through the analyze/compare catches, so the guard's 413 reaches the client while genuinely unexpected extraction bugs now surface as `INTERNAL_ERROR` 500 (previously both masqueraded as `AI_UNREACHABLE` 503)
-- [ ] Reviewed and intentionally deferred (not blocking): `chat` keeps mapping a malformed model reply to `AI_UNREACHABLE` (a bad provider response, not a server bug); SSE backpressure/disconnect is low-risk because events are written only after analysis completes (a handful of small frames, socket-drop already handled); the plain-language summary reads the whole document by design for coherence, and `maxExtractedChars` already bounds that input to fit the model context
+- [x] Hardening pass 4: `sanitizeText` now scans-and-appends (stopping at the ceiling) instead of splitting the whole extraction into a per-character array, so peak memory is bounded by `maxExtractedChars` rather than the raw upload; the analyze route ties an `AbortController` to `res` `close`, and `requestText` accepts a caller `signal` that cancels the in-flight Gemini call and skips further retries — an aborted inspection no longer burns provider quota
+- [ ] Reviewed and intentionally deferred (not blocking): `chat` keeps mapping a malformed model reply to `AI_UNREACHABLE` (a bad provider response, not a server bug); the plain-language summary reads the whole document by design for coherence, and `maxExtractedChars` already bounds that input to fit the model context
 
 ---
 

@@ -27,11 +27,17 @@ const INJECTION_PHRASES = [
  * @returns The sanitised string.
  */
 export function sanitizeText(input: string, maxLen = 200_000): string {
-  const cleaned = input
-    .split('')
-    .filter((char) => char.charCodeAt(0) >= 32 || char === '\n')
-    .join('');
-  return cleaned.slice(0, maxLen);
+  // Scan-and-append (stopping once the ceiling is met) keeps peak memory
+  // bounded by `maxLen`; splitting the whole document first would allocate an
+  // array proportional to the raw extraction (tens of millions of entries).
+  let cleaned = '';
+  for (let i = 0; i < input.length && cleaned.length < maxLen; i += 1) {
+    const char = input[i];
+    if (char.charCodeAt(0) >= 32 || char === '\n') {
+      cleaned += char;
+    }
+  }
+  return cleaned;
 }
 
 /**

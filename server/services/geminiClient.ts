@@ -25,6 +25,11 @@ export interface GeminiOptions {
   backoffMs?: number;
   /** Injectable fetch for determinism in tests; defaults to the global fetch. */
   fetchFn?: typeof globalThis.fetch;
+  /**
+   * Caller-owned signal (e.g. the client connection closing). When it aborts,
+   * the in-flight request is cancelled and no further retries are attempted.
+   */
+  signal?: AbortSignal;
 }
 
 const stripFences = (raw: string): string => {
@@ -257,6 +262,7 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
   const retries = options.retries ?? DEFAULT_RETRIES;
   const backoffMs = options.backoffMs ?? DEFAULT_BACKOFF_MS;
   const fetchFn = options.fetchFn ?? globalThis.fetch;
+  const externalSignal = options.signal;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
     options.apiKey
@@ -267,12 +273,17 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
   let blocked: Error | undefined;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
+    // A disconnected caller means nobody is waiting — stop before spending
+    // another (possibly retried) provider call.
+    if (externalSignal?.aborted) break;
     if (attempt > 0) {
       await new Promise((resolve) => setTimeout(resolve, backoffMs));
     }
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const forwardAbort = (): void => controller.abort();
+      externalSignal?.addEventListener('abort', forwardAbort);
       let response: Response;
       try {
         response = await fetchFn(url, {
@@ -283,6 +294,7 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
         });
       } finally {
         clearTimeout(timer);
+        externalSignal?.removeEventListener('abort', forwardAbort);
       }
 
       if (!response.ok) {
@@ -312,6 +324,7 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
     } catch {
       // swallow attempt errors; retries are governed by the loop, final failure throws below
     }
+    if (externalSignal?.aborted) break;
   }
 
   if (blocked) throw blocked;

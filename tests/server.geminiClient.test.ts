@@ -252,6 +252,42 @@ describe('requestText', () => {
     expect(globalThis.fetch).toHaveBeenCalled();
   });
 
+  it('skips the provider entirely when the caller signal is already aborted', async () => {
+    const fetchFn = vi.fn(async () => textResponse('never'));
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      requestText('p', {
+        apiKey: 'k',
+        fetchFn,
+        retries: 1,
+        backoffMs: 0,
+        signal: controller.signal,
+      })
+    ).rejects.toMatchObject({ name: 'AppError', code: 'AI_UNREACHABLE' });
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('cancels an in-flight request and stops retrying when the caller aborts', async () => {
+    const controller = new AbortController();
+    const fetchFn = vi.fn(
+      (_url: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new Error('client gone')));
+        })
+    );
+    const pending = requestText('p', {
+      apiKey: 'k',
+      fetchFn,
+      retries: 2,
+      backoffMs: 0,
+      signal: controller.signal,
+    });
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ code: 'AI_UNREACHABLE' });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
   it('aborts in-flight requests after the timeout and throws aiUnreachable', async () => {
     const fetchFn = vi.fn(
       (_url: string | URL | Request, init?: RequestInit) =>

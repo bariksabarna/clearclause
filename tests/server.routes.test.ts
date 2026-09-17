@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { existsSync } from 'node:fs';
+import { EventEmitter } from 'node:events';
 import { resolve } from 'node:path';
 import { createApp } from '../server/app';
 import { createAnalyzeRouter } from '../server/routes/analyze';
@@ -231,6 +232,7 @@ describe('POST /api/analyze', () => {
     ) => Promise<unknown>;
     const res = {
       headersSent: true,
+      on: () => undefined,
       write: () => {
         throw new Error('socket closed');
       },
@@ -243,6 +245,51 @@ describe('POST /api/analyze', () => {
         () => undefined
       )
     ).resolves.toBeUndefined();
+  });
+
+  it('cancels the AI calls when the client disconnects mid-analysis', async () => {
+    const signals: AbortSignal[] = [];
+    requestTextMock.mockImplementation((prompt: string, options) => {
+      signals.push(options.signal!);
+      return new Promise<string>((resolve) => {
+        options.signal?.addEventListener('abort', () =>
+          resolve(
+            prompt.startsWith('You are a plain-language')
+              ? 'A summary.'
+              : JSON.stringify(CLAUSE_PAYLOAD)
+          )
+        );
+      });
+    });
+    const router = createAnalyzeRouter({ config: makeApp().config });
+    const firstLayer = (
+      router as unknown as {
+        stack: Array<{ route?: { stack: Array<{ handle: unknown }> } }>;
+      }
+    ).stack[0];
+    const route = firstLayer.route!;
+    const handle = route.stack[route.stack.length - 1].handle as (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ) => Promise<unknown>;
+    const res = Object.assign(new EventEmitter(), {
+      headersSent: false,
+      writeHead: () => undefined,
+      write: () => true,
+      end: () => undefined,
+    }) as unknown as Response;
+
+    const pending = handle(
+      { body: { text: DOC_TEXT }, file: undefined } as unknown as Request,
+      res,
+      () => undefined
+    );
+    (res as unknown as EventEmitter).emit('close');
+
+    await expect(pending).resolves.toBeUndefined();
+    expect(signals).toHaveLength(2);
+    expect(signals.every((signal) => signal.aborted)).toBe(true);
   });
 });
 

@@ -51,6 +51,11 @@ export function createAnalyzeRouter(overrides?: {
     '/',
     upload.single('document'),
     async (req: Request, res: Response, next: NextFunction) => {
+      // If the client goes away (Abort button, navigation, dropped socket) the
+      // in-flight provider calls are cancelled instead of burning quota.
+      const clientAbort = new AbortController();
+      const onClientClose = (): void => clientAbort.abort();
+      res.on('close', onClientClose);
       try {
         let rawText = '';
 
@@ -96,6 +101,7 @@ export function createAnalyzeRouter(overrides?: {
           apiKey: config.geminiApiKey,
           model: config.geminiModel,
           fetchFn: globalThis.fetch,
+          signal: clientAbort.signal,
         };
 
         let clauses: ClauseDto[];

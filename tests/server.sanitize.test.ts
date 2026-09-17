@@ -14,6 +14,14 @@ describe('sanitizeText', () => {
   it('truncates to the configured ceiling', () => {
     expect(sanitizeText('abcabc', 4)).toBe('abca');
   });
+
+  it('stops scanning once the ceiling is reached', () => {
+    expect(sanitizeText('a'.repeat(1_000_000), 10)).toBe('a'.repeat(10));
+  });
+
+  it('preserves astral characters split across surrogate pairs', () => {
+    expect(sanitizeText('hire \u{1F4C4} now')).toBe('hire \u{1F4C4} now');
+  });
 });
 
 describe('isMeaningful', () => {
