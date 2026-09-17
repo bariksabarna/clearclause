@@ -31,7 +31,7 @@ export function createCompareRouter(overrides?: { config?: ReturnType<typeof loa
   const router = Router();
   const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: config.maxUploadBytes * 2 },
+    limits: { fileSize: config.maxUploadBytes },
   });
 
   router.post(
@@ -44,8 +44,8 @@ export function createCompareRouter(overrides?: { config?: ReturnType<typeof loa
 
         // JSON body path (the primary path per the DTO contract)
         if (isCompareRequest(req.body)) {
-          textA = sanitizeText(req.body.documentA);
-          textB = sanitizeText(req.body.documentB);
+          textA = sanitizeText(req.body.documentA, config.maxExtractedChars + 1);
+          textB = sanitizeText(req.body.documentB, config.maxExtractedChars + 1);
         } else if (Array.isArray(req.files) && req.files.length === 2) {
           // Multipart upload path
           for (let i = 0; i < 2; i += 1) {
@@ -60,7 +60,7 @@ export function createCompareRouter(overrides?: { config?: ReturnType<typeof loa
               return next(unsupportedFileType());
             }
             const text = await extractText(detected.mime, file.buffer);
-            const sanitised = sanitizeText(text);
+            const sanitised = sanitizeText(text, config.maxExtractedChars + 1);
             if (!isMeaningful(sanitised)) return next(scannedPdf());
             if (i === 0) textA = sanitised;
             else textB = sanitised;

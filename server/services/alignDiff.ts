@@ -12,6 +12,19 @@ import type { DiffStatus } from '../../shared/dto';
 /** Minimum combined score to accept a match between two clause texts. */
 export const SIMILARITY_THRESHOLD = 0.45;
 
+/**
+ * Safety bounds for the quadratic alignment.
+ *
+ * `/api/compare` is unauthenticated, so without these a document crafted as
+ * one giant clause (or tens of thousands of clauses) would make the O(n·m)
+ * similarity matrix and the O(lenA·lenB) Levenshtein DP block the event loop.
+ */
+export const MAX_ALIGNED_CLAUSES = 500;
+/** Above this many pairs the Levenshtein term is skipped (token overlap only). */
+export const MAX_LEVENSHTEIN_PAIRS = 2500;
+/** Longest normalized string each side is truncated to before the DP. */
+export const MAX_LEVENSHTEIN_CHARS = 5000;
+
 // ─── Text normalisation ─────────────────────────────────────────────────
 
 /** Remove punctuation and lower-case for stable comparison. */
@@ -69,6 +82,47 @@ export function tokenOverlap(aTokens: string[], bTokens: string[]): number {
   return union === 0 ? 0 : intersection / union;
 }
 
+/** Precomputed normalised text + tokens for one clause. */
+interface PreparedClause {
+  normalized: string;
+  tokens: string[];
+}
+
+/** Normalise a clause once so the matrix does not re-normalise per pair. */
+function prepareClause(text: string): PreparedClause {
+  const normalized = normalizeText(text);
+  return { normalized, tokens: normalized.split(' ').filter((w) => w.length > 0) };
+}
+
+/**
+ * Score a precomputed pair.
+ *
+ * @param a         - Prepared clause A.
+ * @param b         - Prepared clause B.
+ * @param useLev    - When false, use token overlap only (bounds worst-case cost).
+ * @returns Score in [0, 1].
+ */
+function scorePair(a: PreparedClause, b: PreparedClause, useLev: boolean): number {
+  const maxLen = Math.max(a.normalized.length, b.normalized.length);
+  if (maxLen === 0) return 1;
+
+  const tokenScore = tokenOverlap(a.tokens, b.tokens);
+  if (!useLev) return tokenScore;
+
+  const aLev =
+    a.normalized.length > MAX_LEVENSHTEIN_CHARS
+      ? a.normalized.slice(0, MAX_LEVENSHTEIN_CHARS)
+      : a.normalized;
+  const bLev =
+    b.normalized.length > MAX_LEVENSHTEIN_CHARS
+      ? b.normalized.slice(0, MAX_LEVENSHTEIN_CHARS)
+      : b.normalized;
+  const levMax = Math.max(aLev.length, bLev.length);
+  const levScore = 1 - levenshteinDistance(aLev, bLev) / levMax;
+
+  return levScore * 0.55 + tokenScore * 0.45;
+}
+
 /**
  * Combined similarity score for two raw clause texts.
  *
@@ -81,15 +135,7 @@ export function tokenOverlap(aTokens: string[], bTokens: string[]): number {
  * @returns Score in [0, 1].
  */
 export function similarity(textA: string, textB: string): number {
-  const a = normalizeText(textA);
-  const b = normalizeText(textB);
-  const maxLen = Math.max(a.length, b.length);
-  if (maxLen === 0) return 1;
-
-  const levScore = 1 - levenshteinDistance(a, b) / maxLen;
-  const tokenScore = tokenOverlap(tokenise(a), tokenise(b));
-
-  return levScore * 0.55 + tokenScore * 0.45;
+  return scorePair(prepareClause(textA), prepareClause(textB), true);
 }
 
 // ─── Clause splitting ───────────────────────────────────────────────────
@@ -135,15 +181,21 @@ export interface AlignResult {
  * @returns Diff items representing the full diff.
  */
 export function alignAndDiff(textA: string, textB: string): AlignResult[] {
-  const clausesA = splitClauses(textA);
-  const clausesB = splitClauses(textB);
+  const allA = splitClauses(textA);
+  const allB = splitClauses(textB);
+  const clausesA = allA.slice(0, MAX_ALIGNED_CLAUSES);
+  const clausesB = allB.slice(0, MAX_ALIGNED_CLAUSES);
 
   const n = clausesA.length;
   const m = clausesB.length;
+  const useLev = n * m <= MAX_LEVENSHTEIN_PAIRS;
+
+  const prepA = clausesA.map(prepareClause);
+  const prepB = clausesB.map(prepareClause);
 
   // build similarity matrix
   const matrix = Array.from({ length: n }, (_, i) =>
-    Array.from({ length: m }, (_, j) => similarity(clausesA[i], clausesB[j]))
+    Array.from({ length: m }, (_, j) => scorePair(prepA[i], prepB[j], useLev))
   );
 
   // flatten all pairs and sort by score descending
@@ -221,6 +273,22 @@ export function alignAndDiff(textA: string, textB: string): AlignResult[] {
         explanation: `Clause added: "${clausesB[j].slice(0, 80)}"`,
       });
     }
+  }
+
+  // clauses beyond the alignment bound are reported positionally (no data loss)
+  for (let i = clausesA.length; i < allA.length; i += 1) {
+    results.push({
+      clauseId: `a${i + 1}`,
+      status: 'removed',
+      explanation: `Clause removed: "${allA[i].slice(0, 80)}"`,
+    });
+  }
+  for (let j = clausesB.length; j < allB.length; j += 1) {
+    results.push({
+      clauseId: `b${j + 1}`,
+      status: 'added',
+      explanation: `Clause added: "${allB[j].slice(0, 80)}"`,
+    });
   }
 
   return results;

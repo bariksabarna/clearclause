@@ -207,9 +207,12 @@ describe('requestText', () => {
     const fetchFn = vi.fn(async () =>
       jsonResponse({ error: { message: 'Request blocked by SAFETY filters' } }, 400)
     );
-    await expect(requestText('p', { apiKey: 'k', fetchFn, retries: 0 })).rejects.toMatchObject({
+    await expect(
+      requestText('p', { apiKey: 'k', fetchFn, retries: 1, backoffMs: 0 })
+    ).rejects.toMatchObject({
       code: 'AI_UNREACHABLE',
     });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
   it('throws aiUnreachable when a non-retryable error body is not JSON', async () => {

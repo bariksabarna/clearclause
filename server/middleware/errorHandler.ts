@@ -55,6 +55,17 @@ export function errorHandler(
       413,
       'The request body is too large. Please upload a smaller document.'
     );
+  } else if (
+    err &&
+    typeof err === 'object' &&
+    'type' in err &&
+    (err as { type?: string }).type === 'entity.parse.failed'
+  ) {
+    appError = new AppError(
+      'INTERNAL_ERROR',
+      400,
+      'The request body was not valid JSON. Please check the request and try again.'
+    );
   } else {
     appError = new AppError('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.');
   }

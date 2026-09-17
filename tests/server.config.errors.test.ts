@@ -95,6 +95,12 @@ describe('config.loadConfig', () => {
     expect(config.rateLimit).toEqual({ windowMs: 1000, maxGlobal: 10, maxAi: 2 });
   });
 
+  it('rejects an overlap greater than or equal to the chunk threshold', () => {
+    expect(() => loadConfig({ CHUNK_THRESHOLD_WORDS: '500', CHUNK_OVERLAP_WORDS: '500' })).toThrow(
+      'CHUNK_OVERLAP_WORDS must be smaller than CHUNK_THRESHOLD_WORDS.'
+    );
+  });
+
   it('falls back for invalid numeric values and freezes the result', () => {
     const config = loadConfig({ PORT: 'nope', MAX_UPLOAD_MB: '-1', RATE_LIMIT_MAX_AI: 'abc' });
     expect(config.port).toBe(8080);

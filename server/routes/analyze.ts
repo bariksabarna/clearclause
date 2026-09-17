@@ -77,7 +77,9 @@ export function createAnalyzeRouter(overrides?: {
           rawText = typeof req.body?.text === 'string' ? req.body.text : '';
         }
 
-        const sanitised = sanitizeText(rawText);
+        // Cap at ceiling + 1 so the FR-18 rejection stays detectable (a plain
+        // truncation to the ceiling would silently hide over-limit documents).
+        const sanitised = sanitizeText(rawText, config.maxExtractedChars + 1);
         if (!isMeaningful(sanitised)) {
           return next(req.file ? scannedPdf() : emptyDocument());
         }

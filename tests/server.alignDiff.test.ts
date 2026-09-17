@@ -169,4 +169,16 @@ describe('alignAndDiff', () => {
     const diffs = alignAndDiff(huge, huge.replace('description', 'fragment'));
     expect(diffs[0].explanation.length).toBeLessThan(huge.length);
   });
+
+  it('stays correct for very long clauses without blowing up the DP', () => {
+    const long = 'clause text '.repeat(1200).trim();
+    expect(similarity(long, long)).toBe(1);
+  });
+
+  it('aligns only the first 500 clauses and reports the rest positionally', () => {
+    const doc = Array.from({ length: 501 }, (_, i) => `Clause number ${i} text.`).join('\n\n');
+    const diffs = alignAndDiff(doc, doc);
+    expect(diffs.some((d) => d.clauseId === 'a501' && d.status === 'removed')).toBe(true);
+    expect(diffs.some((d) => d.clauseId === 'b501' && d.status === 'added')).toBe(true);
+  });
 });

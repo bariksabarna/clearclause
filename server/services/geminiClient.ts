@@ -262,6 +262,10 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
     options.apiKey
   )}`;
 
+  // Safety-blocked responses are terminal, not transient: fail fast instead of
+  // burning the retry budget (the outer catch would otherwise swallow the throw).
+  let blocked: Error | undefined;
+
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     if (attempt > 0) {
       await new Promise((resolve) => setTimeout(resolve, backoffMs));
@@ -289,10 +293,11 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
           const body = (await response.json()) as GeminiResponseShape;
           const apiMessage = body.error?.message;
           if (apiMessage && /blocked|copyright|SAFETY/i.test(apiMessage)) {
-            throw aiUnreachable();
+            blocked = aiUnreachable();
+            break;
           }
-        } catch (err) {
-          if (err instanceof Error && err.name === 'AppError') throw err;
+        } catch {
+          // Non-JSON error body; fall through to the retry/exhaust path.
         }
         continue;
       }
@@ -309,5 +314,6 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
     }
   }
 
+  if (blocked) throw blocked;
   throw aiUnreachable();
 }

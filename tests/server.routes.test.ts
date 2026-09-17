@@ -173,6 +173,16 @@ describe('POST /api/analyze', () => {
     expect(res.body.code).toBe('EMPTY_DOCUMENT');
   });
 
+  it('rejects a malformed JSON body with 400', async () => {
+    const { app } = makeApp();
+    const res = await request(app)
+      .post('/api/analyze')
+      .set('Content-Type', 'application/json')
+      .send('{ not valid json');
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('INTERNAL_ERROR');
+  });
+
   it('rejects an upload whose magic bytes are not a document', async () => {
     const { app } = makeApp();
     const res = await request(app)
@@ -437,6 +447,17 @@ describe('POST /api/compare', () => {
       .attach('documents', blank, 'b.pdf');
     expect(res.status).toBe(422);
     expect(res.body.code).toBe('SCANNED_PDF');
+  });
+
+  it('rejects a comparison file above the upload ceiling', async () => {
+    const { app } = makeApp();
+    const oversized = Buffer.alloc(5 * 1024 * 1024 + 1, 1);
+    const res = await request(app)
+      .post('/api/compare')
+      .attach('documents', oversized, 'a.pdf')
+      .attach('documents', oversized, 'b.pdf');
+    expect(res.status).toBe(413);
+    expect(res.body.code).toBe('UPLOAD_TOO_LARGE');
   });
 
   it('rejects document text beyond the character ceiling', async () => {

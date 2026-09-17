@@ -86,6 +86,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
       maxAi: toPositiveInt(env.RATE_LIMIT_MAX_AI, 20, 'RATE_LIMIT_MAX_AI'),
     },
   };
+  if (config.chunkOverlapWords >= config.chunkThresholdWords) {
+    throw new Error('CHUNK_OVERLAP_WORDS must be smaller than CHUNK_THRESHOLD_WORDS.');
+  }
   Object.freeze(config.rateLimit);
   return Object.freeze(config);
 }
