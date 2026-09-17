@@ -63,9 +63,12 @@ Production checks:
 npm run lint              # ESLint, zero warnings allowed
 npm run test:coverage     # Vitest, 100% enforced
 npm run build             # tsc --noEmit + vite build
+npm run smoke             # boot the real server and check routes end to end
 npm run format:check      # Prettier
 npm start                 # serve dist/ + API from :8080
 ```
+
+`npm run smoke` boots `server/index.ts` on a throwaway port with no AI key and verifies SPA serving, SPA fallback, intake validation (413/415), graceful AI failure, and the deterministic checklist/export endpoints. Point it at a deployment with `SMOKE_BASE_URL=https://your-app npm run smoke`.
 
 ## Environment variables
 

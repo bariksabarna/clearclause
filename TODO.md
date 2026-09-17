@@ -84,7 +84,7 @@
 
 - [x] `npm run lint` zero warnings, `npm run test:coverage` 100%, `npm run build` clean
 - [x] Sample docs for demo (job offer, lease, ToS) with seeded inconsistency — `samples/*.txt`, mirrored by the Home sample chips; `tests/samples.test.ts` asserts each seeded conflict fires through `findInconsistencies`
-- [x] Local production smoke test (`npm start`): SPA `200`, SPA fallback `200`, unknown API `404` JSON, oversized upload `413`, `.txt` upload `415` (FR-1), AI-without-key graceful SSE error — no crash, no document text logged
+- [x] Local production smoke test — automated as `npm run smoke` (`scripts/smoke.mjs`, 8 checks): SPA `200`, SPA fallback `200`, unknown API `404` JSON, oversized upload `413`, `.txt` upload `415` (FR-1), AI-without-key graceful SSE error, checklist derive + export; also accepts `SMOKE_BASE_URL=…` to test a deployment (no crash, no document text logged)
 - [ ] Deploy (Cloud Run/Vercel), live smoke test of upload → summary → chat → checklist — blocked: no `docker`/`gh`/cloud credentials in this environment
 - [~] Walk every traceability-matrix row (PRD-1 §3) against the live URL — **local code walk done** (evidence below); re-run against the deployed URL once deploy lands
   - [x] Plain-language summary (Must) — `routes/analyze.ts` SSE `summary`; `AnalysisScreen` header; `server.routes.test.ts`
