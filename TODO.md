@@ -86,7 +86,7 @@
 - [x] `npm run lint` zero warnings, `npm run test:coverage` 100%, `npm run build` clean
 - [x] Sample docs for demo (job offer, lease, ToS) with seeded inconsistency — `samples/*.txt`, mirrored by the Home sample chips; `tests/samples.test.ts` asserts each seeded conflict fires through `findInconsistencies`
 - [x] Local production smoke test — automated as `npm run smoke` (`scripts/smoke.mjs`, 9 checks): SPA `200`, SPA fallback `200`, unknown API `404` JSON, empty pasted text `400 EMPTY_DOCUMENT`, oversized upload `413`, `.txt` upload `415` (FR-1), AI-without-key graceful SSE error, checklist derive + export; also accepts `SMOKE_BASE_URL=…` to test a deployment (no crash, no document text logged)
-- [ ] Deploy (Cloud Run/Vercel), live smoke test of upload → summary → chat → checklist — blocked: no `docker`/`gh`/cloud credentials in this environment
+- [ ] Deploy (Cloud Run/Vercel), live smoke test of upload → summary → chat → checklist — blocked: every authenticated GCP project has billing disabled (all visible billing accounts are closed trials) and no alternative host token (Vercel/Render/Fly) or `GEMINI_API_KEY` is available. `gcloud` is authenticated and `npm run smoke` accepts `SMOKE_BASE_URL`, so the deploy + live verification run is one command once a billing account or host is provided.
 - [~] Walk every traceability-matrix row (PRD-1 §3) against the live URL — **local code walk done** (evidence below); re-run against the deployed URL once deploy lands
   - [x] Plain-language summary (Must) — `routes/analyze.ts` SSE `summary`; `AnalysisScreen` header; `server.routes.test.ts`
   - [x] Clause tagging + red-flag detector (Must) — `clauseTagger.ts`, `inconsistencyChecker.ts`, `ClauseBadge`; `clauseTagger`/`inconsistency` tests
@@ -96,7 +96,7 @@
   - [x] Lawyer-prep questions export PDF/text (Must) — `deriveLawyerQuestions`, `/api/checklist/export`; `server.export.test.ts`
   - [x] Compare tab clause-level diff (Should) — `alignDiff.ts`, `routes/compare.ts`, `CompareScreen`; `server.alignDiff.test.ts`
   - [x] Error/edge matrix (PRD-1 §8) — all 8 rows mapped: >5 MB (413 + client guard), unsupported/scanned/too-large intake → IssuesScreen, AI retry+backoff → plain message + Try again, 429 `RATE_LIMITED` message carries the retry window, injection logged, chat no-answer state, long-doc chunking
-- [~] Repo public, single branch, < 10 MB; README states vertical/approach/assumptions — **local git done** (`main`, initial commit `0b5aa86`, 99 files / 940 KB tracked, `.env`/`node_modules`/`dist`/`coverage` ignored, no secrets); making it public needs a remote + `gh`/credentials
+- [x] Repo public, single branch, < 10 MB; README states vertical/approach/assumptions — published at **https://github.com/bariksabarna/clearclause** (`main` only, 101 files / 1.5 MB `.git`, secret scan clean, `.env`/`node_modules`/`dist`/`coverage` ignored)
 
 ---
 
