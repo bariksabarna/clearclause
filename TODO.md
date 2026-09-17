@@ -102,6 +102,6 @@
 
 ## Open decisions (from SRS §2.6 + PRD-1 §13)
 
-- Which Gemini free-tier model to lock at build time (confirm before Day 1)
+- Which Gemini free-tier model to lock at build time (confirm before Day 1) → **resolved: `gemini-2.0-flash` is the built-in default (`DEFAULT_GEMINI_MODEL`), overridable via `GEMINI_MODEL`; documented in README + `.env.example`, asserted in `server.config.errors.test.ts`**
 - Server-side TS strategy (tsx vs compiled `dist-server/`) since DTOs are `.ts` → **resolved: tsx runtime**
-- Whether Hindi/Bengali toggle ships (Could / stretch)
+- Whether Hindi/Bengali toggle ships (Could / stretch) → **resolved: not shipping this build (English primary); `LANGUAGES`/`Language` retained in the DTO contract for future work, decision recorded in README**

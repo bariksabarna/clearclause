@@ -16,6 +16,9 @@ export interface RateLimitConfig {
   maxAi: number;
 }
 
+/** Gemini model id used when `GEMINI_MODEL` is unset (locked at build time). */
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
+
 export interface ServerConfig {
   /** Port the HTTP server binds to. */
   port: number;
@@ -23,6 +26,8 @@ export interface ServerConfig {
   nodeEnv: string;
   /** Gemmservice key for the AI provider. Empty in local/test when mocked. */
   geminiApiKey: string;
+  /** Gemini model id used for every AI call; override with `GEMINI_MODEL`. */
+  geminiModel: string;
   /** Comma-separated CORS origin whitelist. Empty array allows no cross-origin calls. */
   allowedOrigins: string[];
   /** Upload size ceiling in bytes (FR-1). */
@@ -69,6 +74,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     port: toPositiveInt(env.PORT, 8080, 'PORT'),
     nodeEnv: env.NODE_ENV || 'development',
     geminiApiKey: env.GEMINI_API_KEY || '',
+    geminiModel: env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL,
     allowedOrigins: parseOrigins(env.ALLOWED_ORIGINS),
     maxUploadBytes: toPositiveInt(env.MAX_UPLOAD_MB, 5, 'MAX_UPLOAD_MB') * 1024 * 1024,
     maxExtractedChars: toPositiveInt(env.MAX_EXTRACTED_CHARS, 2_000_000, 'MAX_EXTRACTED_CHARS'),

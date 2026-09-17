@@ -43,7 +43,11 @@ export function createChatRouter(overrides?: {
       const sanitisedDoc = sanitizeText(body.sessionText, config.maxExtractedChars);
       const sanitisedQuestion = sanitizeText(body.question, 2000);
 
-      const geminiOpts: GeminiOptions = { apiKey: config.geminiApiKey, fetchFn: globalThis.fetch };
+      const geminiOpts: GeminiOptions = {
+        apiKey: config.geminiApiKey,
+        model: config.geminiModel,
+        fetchFn: globalThis.fetch,
+      };
       const raw = await llmRequest(buildChatPrompt(sanitisedDoc, sanitisedQuestion), geminiOpts);
       const result = parseChatResponse(raw);
 

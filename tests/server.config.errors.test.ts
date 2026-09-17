@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadConfig, parseOrigins, toPositiveInt } from '../server/config';
+import { DEFAULT_GEMINI_MODEL, loadConfig, parseOrigins, toPositiveInt } from '../server/config';
 import {
   aiUnreachable,
   AppError,
@@ -59,6 +59,7 @@ describe('config.loadConfig', () => {
     expect(config.port).toBe(8080);
     expect(config.nodeEnv).toBe('development');
     expect(config.geminiApiKey).toBe('');
+    expect(config.geminiModel).toBe(DEFAULT_GEMINI_MODEL);
     expect(config.allowedOrigins).toEqual([]);
     expect(config.maxUploadBytes).toBe(5 * 1024 * 1024);
     expect(config.maxExtractedChars).toBe(2_000_000);
@@ -72,6 +73,7 @@ describe('config.loadConfig', () => {
       PORT: '4000',
       NODE_ENV: 'production',
       GEMINI_API_KEY: 'secret',
+      GEMINI_MODEL: 'gemini-2.5-pro',
       ALLOWED_ORIGINS: 'https://clearclause.app',
       MAX_UPLOAD_MB: '2',
       MAX_EXTRACTED_CHARS: '1000',
@@ -84,6 +86,7 @@ describe('config.loadConfig', () => {
     expect(config.port).toBe(4000);
     expect(config.nodeEnv).toBe('production');
     expect(config.geminiApiKey).toBe('secret');
+    expect(config.geminiModel).toBe('gemini-2.5-pro');
     expect(config.allowedOrigins).toEqual(['https://clearclause.app']);
     expect(config.maxUploadBytes).toBe(2 * 1024 * 1024);
     expect(config.maxExtractedChars).toBe(1000);

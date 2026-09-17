@@ -72,16 +72,17 @@ npm start                 # serve dist/ + API from :8080
 
 ## Environment variables
 
-| Variable                | Purpose                                                     |
-| ----------------------- | ----------------------------------------------------------- |
-| `GEMINI_API_KEY`        | AI provider key, server-side only (secret, never committed) |
-| `PORT`                  | Server port (default 8080)                                  |
-| `ALLOWED_ORIGINS`       | Comma-separated CORS whitelist                              |
-| `RATE_LIMIT_WINDOW_MS`  | Rate-limit window                                           |
-| `RATE_LIMIT_MAX_GLOBAL` | Global request cap per window                               |
-| `RATE_LIMIT_MAX_AI`     | AI-endpoint cap per window                                  |
-| `MAX_UPLOAD_MB`         | Upload size ceiling (5)                                     |
-| `MAX_EXTRACTED_CHARS`   | Extracted-text ceiling (2,000,000)                          |
+| Variable                | Purpose                                                            |
+| ----------------------- | ------------------------------------------------------------------ |
+| `GEMINI_API_KEY`        | AI provider key, server-side only (secret, never committed)        |
+| `GEMINI_MODEL`          | Gemini model id (default `gemini-2.0-flash`, locked at build time) |
+| `PORT`                  | Server port (default 8080)                                         |
+| `ALLOWED_ORIGINS`       | Comma-separated CORS whitelist                                     |
+| `RATE_LIMIT_WINDOW_MS`  | Rate-limit window                                                  |
+| `RATE_LIMIT_MAX_GLOBAL` | Global request cap per window                                      |
+| `RATE_LIMIT_MAX_AI`     | AI-endpoint cap per window                                         |
+| `MAX_UPLOAD_MB`         | Upload size ceiling (5)                                            |
+| `MAX_EXTRACTED_CHARS`   | Extracted-text ceiling (2,000,000)                                 |
 
 ## Design decisions and assumptions
 
@@ -89,7 +90,8 @@ npm start                 # serve dist/ + API from :8080
 - **Documents are text-extractable** (native PDF/DOCX/plain text). Scanned/image-only PDFs are out of scope — the user gets a clear "can't read this file" message (FR-2).
 - **No persistence.** Session content lives in the browser between calls; the server is stateless and discards document content after each response (FR-12). No document text is ever logged (FR-15).
 - **Grounded answers only.** Chat citations come from the tagged clauses; if the document doesn't address the question, the answer says so (FR-6).
-- **Language:** English primary; Hindi/Bengali output is a stretch goal.
+- **AI model locked at build time.** `gemini-2.0-flash` (free tier) is the single model id for every AI call; `GEMINI_MODEL` overrides it per deployment with no code change.
+- **Language:** English primary. The Hindi/Bengali toggle is a documented Could-have and is intentionally not shipped in this build (`LANGUAGES`/`Language` stay in the DTO contract for future use).
 
 ## Repository layout
 

@@ -105,6 +105,7 @@ export function createAnalyzeRouter(overrides?: {
 
         const geminiOpts: GeminiOptions = {
           apiKey: config.geminiApiKey,
+          model: config.geminiModel,
           fetchFn: globalThis.fetch,
         };
 

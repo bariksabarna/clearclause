@@ -8,8 +8,8 @@
  * before a user-visible error is surfaced (FR-16).
  */
 import type { ClauseDto, ClauseTag, RiskSeverity } from '../../shared/dto';
+import { DEFAULT_GEMINI_MODEL } from '../config';
 import { aiUnreachable } from '../errors';
-export const DEFAULT_MODEL = 'gemini-2.0-flash';
 /** How long one generateContent call may take before aborting. */
 export const DEFAULT_TIMEOUT_MS = 60_000;
 /** Additional attempts after the first call (total = retries + 1). */
@@ -252,7 +252,7 @@ interface GeminiResponseShape {
  * @returns The full model response text.
  */
 export async function requestText(prompt: string, options: GeminiOptions): Promise<string> {
-  const model = options.model ?? DEFAULT_MODEL;
+  const model = options.model ?? DEFAULT_GEMINI_MODEL;
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const retries = options.retries ?? DEFAULT_RETRIES;
   const backoffMs = options.backoffMs ?? DEFAULT_BACKOFF_MS;
