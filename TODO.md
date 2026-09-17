@@ -94,6 +94,7 @@
   - [x] One-click checklist generator (Must) — `services/checklist.ts`, `routes/checklist.ts`, `ChecklistScreen`; `server.checklist.test.ts`
   - [x] Lawyer-prep questions export PDF/text (Must) — `deriveLawyerQuestions`, `/api/checklist/export`; `server.export.test.ts`
   - [x] Compare tab clause-level diff (Should) — `alignDiff.ts`, `routes/compare.ts`, `CompareScreen`; `server.alignDiff.test.ts`
+  - [x] Error/edge matrix (PRD-1 §8) — all 8 rows mapped: >5 MB (413 + client guard), unsupported/scanned/too-large intake → IssuesScreen, AI retry+backoff → plain message + Try again, 429 `RATE_LIMITED` message carries the retry window, injection logged, chat no-answer state, long-doc chunking
 - [~] Repo public, single branch, < 10 MB; README states vertical/approach/assumptions — **local git done** (`main`, initial commit `0b5aa86`, 99 files / 940 KB tracked, `.env`/`node_modules`/`dist`/`coverage` ignored, no secrets); making it public needs a remote + `gh`/credentials
 
 ---
