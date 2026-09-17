@@ -86,7 +86,7 @@
 - [x] Local production smoke test (`npm start`): SPA `200`, SPA fallback `200`, unknown API `404` JSON, oversized upload `413`, `.txt` upload `415` (FR-1), AI-without-key graceful SSE error — no crash, no document text logged
 - [ ] Deploy (Cloud Run/Vercel), live smoke test of upload → summary → chat → checklist — blocked: no `docker`/`gh`/cloud credentials in this environment
 - [ ] Walk every traceability-matrix row (PRD-1 §3) against the live URL
-- [ ] Repo public, single branch, < 10 MB; README states vertical/approach/assumptions — source tree is ~1 MB, but this directory is not a git repo and there is no `gh`/remote, so publishing needs credentials
+- [~] Repo public, single branch, < 10 MB; README states vertical/approach/assumptions — **local git done** (`main`, initial commit `0b5aa86`, 99 files / 940 KB tracked, `.env`/`node_modules`/`dist`/`coverage` ignored, no secrets); making it public needs a remote + `gh`/credentials
 
 ---
 
