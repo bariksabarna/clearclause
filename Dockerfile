@@ -13,9 +13,10 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-USER node
 
-COPY --chown=node:node package*.json ./
+# Install runtime deps while still root (the WORKDIR is root-owned), then drop
+# to the unprivileged `node` user for everything that ships into the image.
+COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --chown=node:node --from=builder /app/dist ./dist
@@ -23,5 +24,6 @@ COPY --chown=node:node tsconfig.json ./
 COPY --chown=node:node server/ ./server/
 COPY --chown=node:node shared/ ./shared/
 
+USER node
 EXPOSE 8080
 CMD ["node_modules/.bin/tsx", "server/index.ts"]

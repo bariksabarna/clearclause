@@ -17,7 +17,7 @@
 - [x] `package.json` — deps/devDeps split per `00-overview` table (`compression` in **dependencies**; `tsx` runtime, `multer@2`, `file-type@22`, `vite@8`/`vitest@5` — 0 audit vulnerabilities)
 - [x] `tsconfig.json` (strict) + ESLint `--max-warnings 0` + Prettier (flat config; `ignoreRestSiblings` for omit-pattern tests)
 - [x] Vitest with 100% coverage thresholds, `coverage.exclude` for configs/entry (vitest 5 removed `all:true` — include-all is now default)
-- [x] `Dockerfile` multistage + `.dockerignore` (excludes `node_modules`, `dist`, `.env`, `.git`, `coverage`, `tests`)
+- [x] `Dockerfile` multistage + `.dockerignore` (excludes `node_modules`, `dist`, `.env`, `.git`, `coverage`, `tests`); runner stage installs prod deps as root **before** `USER node` (avoids EACCES on the root-owned WORKDIR), and `tsx` is a production dependency so the CMD resolves under `--omit=dev`
 - [x] `.env.example` + README skeleton (architecture diagram, assumptions)
 - [x] Minimal Vite + React scaffold (root `client/`, `outDir ../dist`) so `npm run build`/+Docker work end-to-end
 - [x] Unit tests for `validators.ts` (valid/invalid/empty/malformed) + `App.test.jsx` — 28 tests, 100% gate green → feed the 100% gate
@@ -85,7 +85,7 @@
 
 - [x] `npm run lint` zero warnings, `npm run test:coverage` 100%, `npm run build` clean
 - [x] Sample docs for demo (job offer, lease, ToS) with seeded inconsistency — `samples/*.txt`, mirrored by the Home sample chips; `tests/samples.test.ts` asserts each seeded conflict fires through `findInconsistencies`
-- [x] Local production smoke test — automated as `npm run smoke` (`scripts/smoke.mjs`, 8 checks): SPA `200`, SPA fallback `200`, unknown API `404` JSON, oversized upload `413`, `.txt` upload `415` (FR-1), AI-without-key graceful SSE error, checklist derive + export; also accepts `SMOKE_BASE_URL=…` to test a deployment (no crash, no document text logged)
+- [x] Local production smoke test — automated as `npm run smoke` (`scripts/smoke.mjs`, 9 checks): SPA `200`, SPA fallback `200`, unknown API `404` JSON, empty pasted text `400 EMPTY_DOCUMENT`, oversized upload `413`, `.txt` upload `415` (FR-1), AI-without-key graceful SSE error, checklist derive + export; also accepts `SMOKE_BASE_URL=…` to test a deployment (no crash, no document text logged)
 - [ ] Deploy (Cloud Run/Vercel), live smoke test of upload → summary → chat → checklist — blocked: no `docker`/`gh`/cloud credentials in this environment
 - [~] Walk every traceability-matrix row (PRD-1 §3) against the live URL — **local code walk done** (evidence below); re-run against the deployed URL once deploy lands
   - [x] Plain-language summary (Must) — `routes/analyze.ts` SSE `summary`; `AnalysisScreen` header; `server.routes.test.ts`
