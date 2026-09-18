@@ -3,6 +3,7 @@
  *
  * Loads environment config, builds the app, and starts the HTTP listener.
  */
+import 'dotenv/config';
 import { loadConfig } from './config';
 import { createApp } from './app';
 

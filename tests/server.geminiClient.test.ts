@@ -177,7 +177,7 @@ describe('requestText', () => {
     expect(result).toBe('onetwo');
     expect(fetchFn).toHaveBeenCalledTimes(1);
     const [url, init] = fetchFn.mock.calls[0];
-    expect(String(url)).toContain('models/gemini-2.0-flash:generateContent');
+    expect(String(url)).toContain('models/gemini-3.6-flash:generateContent');
     expect((init as RequestInit).body).toContain('prompt');
   });
 

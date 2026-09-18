@@ -17,7 +17,7 @@ export interface RateLimitConfig {
 }
 
 /** Gemini model id used when `GEMINI_MODEL` is unset (locked at build time). */
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.6-flash';
 
 export interface ServerConfig {
   /** Port the HTTP server binds to. */
