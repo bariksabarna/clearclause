@@ -120,6 +120,16 @@ export default function HomeScreen() {
                 </button>
               ))}
             </div>
+            <a
+              href="/samples/12-Month-Apartment-Lease.pdf"
+              download
+              className="mt-4 inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary transition-colors hover:text-primary"
+            >
+              <span aria-hidden="true" className="material-symbols-outlined text-[15px]">
+                download
+              </span>
+              Download sample lease as PDF
+            </a>
           </div>
         </div>
       </section>

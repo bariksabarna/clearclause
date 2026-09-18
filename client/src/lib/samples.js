@@ -23,7 +23,7 @@ This letter confirms our offer of employment to you as Senior Product Designer.
 
 6. Relocation. If you voluntarily resign within 12 months of starting, you must repay the relocation stipend of $8,000 in full.`;
 
-const LEASE_TEXT = `Residential Apartment Lease Agreement
+export const LEASE_TEXT = `Residential Apartment Lease Agreement
 
 1. Term. This lease begins on October 1, 2024 and ends on September 30, 2025.
 
