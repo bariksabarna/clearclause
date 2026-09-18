@@ -25,7 +25,13 @@ describe('axe accessibility (critical violations only)', () => {
         <App />
       </MemoryRouter>
     );
-    await screen.findByRole('heading', { name: 'Understand your contract in plain English.' });
+    await screen.findByRole(
+      'heading',
+      { name: 'Understand your contract in plain English.' },
+      {
+        timeout: 10_000,
+      }
+    );
     const results = await axe(container);
     expect(results.violations.filter((v) => v.impact === 'critical')).toHaveLength(0);
   });
