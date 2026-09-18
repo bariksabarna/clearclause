@@ -51,6 +51,13 @@ export default function UploadDropzone({ onFile, busy = false }) {
 
   return (
     <div className="relative">
+      <span
+        aria-hidden="true"
+        className="absolute -top-3 -left-3 hidden items-center gap-1 bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-secondary shadow-sm sm:flex"
+      >
+        <span className="h-2 w-2 bg-primary" />
+        CALIBRATED VIEWPORT &bull; STAGE 01
+      </span>
       <input
         ref={inputRef}
         type="file"

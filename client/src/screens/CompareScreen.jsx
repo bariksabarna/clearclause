@@ -119,7 +119,7 @@ export default function CompareScreen() {
     <>
       <DisclaimerBar
         message="Informational comparison only — not legal advice."
-        signal="Diff Engine v4.1 (Bi-directional Token Scan)"
+        signal="Diff Engine v4.1 (Bi-directional Token Scan) • Synced Scrolling Enabled"
       />
       <section className="w-full bg-surface-container-lowest px-4 py-6 sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-4">
@@ -184,6 +184,10 @@ export default function CompareScreen() {
               <div className="flex flex-wrap items-center justify-between gap-3 bg-surface-container px-4 py-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex flex-wrap items-center gap-3 font-label-sm text-label-sm text-secondary">
+                    <span className="flex items-center gap-1.5 bg-surface-container-lowest px-3 py-1 shadow-sm">
+                      <span className="font-semibold text-primary">Status:</span>
+                      <span className="text-on-surface-variant">Reconciled</span>
+                    </span>
                     <span className="flex items-center gap-1.5 bg-surface-container-lowest px-3 py-1 font-semibold text-primary shadow-sm">
                       <span className="flex h-4 w-4 items-center justify-center bg-tertiary-container text-[11px] font-bold text-on-tertiary-container">
                         ~

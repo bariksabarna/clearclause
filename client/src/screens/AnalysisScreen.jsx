@@ -14,6 +14,12 @@ const FILTERS = [
   { key: 'Low', label: 'Low' },
 ];
 
+const LEVEL_META = {
+  High: { label: 'LEVEL: SEVERE', tone: 'text-error' },
+  Medium: { label: 'LEVEL: MODERATE', tone: 'text-risk-medium' },
+  Low: { label: 'WEIGHT: NEUTRAL', tone: 'text-secondary' },
+};
+
 export default function AnalysisScreen() {
   const { state } = useSession();
   const [filter, setFilter] = useState('all');
@@ -165,7 +171,18 @@ export default function AnalysisScreen() {
 
       <section className="w-full bg-surface px-4 py-6 sm:px-6">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-6 lg:grid-cols-12">
-          <div className="lg:col-span-7">
+          <div className="relative lg:col-span-7">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-4 top-3 z-10 flex select-none flex-col items-end opacity-40"
+            >
+              <span className="font-code-mono text-[10px] uppercase tracking-widest text-secondary">
+                PROOF COPY &bull; UNEXECUTED
+              </span>
+              <span className="font-code-mono text-[9px] text-outline">
+                STAMP &bull; SESSION {state.clauses.length}
+              </span>
+            </span>
             <DocumentPane clauses={clauses} title={state.fileName ?? 'Document'} />
           </div>
           <div className="flex flex-col gap-4 lg:col-span-5">
@@ -253,16 +270,34 @@ export default function AnalysisScreen() {
                     {clause.severityReason}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => scrollToClause(clause.id)}
-                  className="mt-2 flex items-center gap-1 font-label-sm text-label-sm text-secondary transition-colors hover:text-primary"
-                >
-                  <span aria-hidden="true" className="material-symbols-outlined text-[14px]">
-                    my_location
+                {clause.severity === 'High' ? (
+                  <Link
+                    to="/compare"
+                    className="mt-2 inline-flex items-center gap-1 font-label-sm text-label-sm font-semibold text-error transition-colors hover:underline"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[14px]">
+                      difference
+                    </span>
+                    Propose Redline Revision
+                  </Link>
+                ) : null}
+                <div className="mt-2 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => scrollToClause(clause.id)}
+                    className="flex items-center gap-1 font-label-sm text-label-sm text-secondary transition-colors hover:text-primary"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[14px]">
+                      my_location
+                    </span>
+                    Pin to Clause {clause.id.replace(/^c/, '')}
+                  </button>
+                  <span
+                    className={`font-code-mono text-[11px] font-bold ${LEVEL_META[clause.severity]?.tone ?? 'text-secondary'}`}
+                  >
+                    {LEVEL_META[clause.severity]?.label ?? 'WEIGHT: NEUTRAL'}
                   </span>
-                  Pin to Clause {clause.id.replace(/^c/, '')}
-                </button>
+                </div>
               </article>
             ))}
             <p className="flex items-center gap-2 bg-surface-container p-3 font-label-sm text-label-sm text-secondary">

@@ -228,6 +228,32 @@ export default function ChecklistScreen() {
           </div>
         </div>
 
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 bg-surface-container-lowest p-6 shadow-sm sm:flex-row sm:items-center">
+          <div className="flex items-start gap-3">
+            <span aria-hidden="true" className="material-symbols-outlined text-[24px] text-primary">
+              rule
+            </span>
+            <div>
+              <span className="font-label-md text-label-md font-semibold uppercase tracking-wide text-primary">
+                Want a Counter-Draft?
+              </span>
+              <p className="mt-0.5 font-body-sm text-body-sm text-secondary">
+                Draft alternative clause language against the original in the redline workspace,
+                then verify every proposed change clause by clause.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/compare"
+            className="flex shrink-0 items-center gap-2 bg-primary px-5 py-2.5 font-label-lg text-label-lg font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-container"
+          >
+            <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+              difference
+            </span>
+            Draft Counter-Proposal
+          </Link>
+        </div>
+
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
           <section className="flex flex-col gap-4 bg-surface-container-lowest p-6 shadow-sm lg:col-span-6">
             <div className="flex items-center justify-between border-b border-surface-dim pb-4">
