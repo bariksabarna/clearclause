@@ -70,6 +70,26 @@ npm start                 # serve dist/ + API from :8080
 
 `npm run smoke` boots `server/index.ts` on a throwaway port with no AI key and verifies SPA serving, SPA fallback, intake validation (413/415/400 empty document), graceful AI failure, and the deterministic checklist/export endpoints. Point it at a deployment with `SMOKE_BASE_URL=https://your-app npm run smoke`.
 
+## Deployment (Render — recommended)
+
+`render.yaml` gives a one-click web service on the free tier. The SPA and API
+are served same-origin by the single Express process, so no CORS config is
+needed.
+
+1. Push this repo to GitHub.
+2. In Render: **New → Blueprint**, pick the repo, and create.
+3. Set the `GEMINI_API_KEY` secret in **Environment** (free from
+   [AI Studio](https://aistudio.google.com/), no billing required). It is
+   `sync: false` in the blueprint so the key stays out of the repo.
+4. On the free plan the service sleeps after 15 minutes idle; the first visit
+   after a pause cold-starts in ~30–60s.
+
+Verify the live deployment with the same suite used locally:
+
+```bash
+SMOKE_BASE_URL=https://<service-url> npm run smoke
+```
+
 ## Deployment (Google Cloud Run)
 
 The target project must have billing enabled — Cloud Run, Cloud Build, and Artifact Registry all reject requests with `BILLING_DISABLED` otherwise.

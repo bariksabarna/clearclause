@@ -1,0 +1,24 @@
+# Render blueprints — one-click deployment for ClearClause.
+#
+# https://render.com/docs/blueprint-spec
+# After creating the service, set the GEMINI_API_KEY secret in the dashboard
+# (it is deliberately `sync: false` so the key never lives in this repo).
+services:
+  - type: web
+    name: clearclause
+    runtime: node
+    plan: free
+    region: oregon
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: 'true'
