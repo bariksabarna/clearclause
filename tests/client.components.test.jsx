@@ -40,10 +40,25 @@ describe('SkipLink', () => {
 
 describe('AppFooter', () => {
   it('renders the copyright and legal links', () => {
-    render(<AppFooter />);
-    expect(screen.getByText(/All rights reserved/)).toBeInTheDocument();
+    wrap(<AppFooter />);
+    expect(
+      screen.getByText(/© \d{4} ClearClause Analytical Systems\. All rights reserved\./)
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(3);
-    expect(screen.getByRole('navigation', { name: 'Legal' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Site links' })).toBeInTheDocument();
+  });
+
+  it('links to real destinations instead of dead anchors', () => {
+    wrap(<AppFooter />);
+    expect(screen.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
+      '/issues',
+      '/issues',
+      '/samples/12-Month-Apartment-Lease.pdf',
+    ]);
+    expect(screen.getByRole('link', { name: 'Download Sample Lease' })).toHaveAttribute(
+      'download',
+      ''
+    );
   });
 });
 

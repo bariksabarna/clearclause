@@ -1,3 +1,8 @@
+/**
+ * Application shell. Mounts the session store, renders the persistent chrome
+ * (skip link, header, footer), and code-splits the six screens behind a
+ * Suspense fallback so route chunks load only when first visited.
+ */
 import { Suspense, lazy } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import { SessionProvider } from './store/session.jsx';

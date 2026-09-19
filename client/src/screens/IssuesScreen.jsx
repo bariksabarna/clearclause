@@ -1,3 +1,6 @@
+/**
+ * Issues / help screen. Maps every diagnostic code to a one-screen fix: giant-case copy paste, file-type and size limits, scanned vs selectable PDFs, rate limiting, plus the mandatory legal disclaimer.
+ */
 import { Link, useSearchParams } from 'react-router-dom';
 import DisclaimerBar from '../components/DisclaimerBar.jsx';
 

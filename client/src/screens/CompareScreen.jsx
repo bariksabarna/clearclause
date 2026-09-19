@@ -1,3 +1,6 @@
+/**
+ * Compare screen. Clause-level diff between two documents with added/removed/modified statuses, severity counts, and per-diff helper explanations - plus an empty state for no comparison yet.
+ */
 import { useState } from 'react';
 import { compareDocuments } from '../lib/api.js';
 import DisclaimerBar from '../components/DisclaimerBar.jsx';

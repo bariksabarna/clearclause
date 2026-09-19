@@ -1,3 +1,6 @@
+/**
+ * Analysis screen. Renders the tagged clause document with severity badges, derives the plain-language options panel from High clauses, keeps a persistent disclaimer, and anchors clauses so citations can scroll to them.
+ */
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSession } from '../store/session.jsx';
@@ -180,7 +183,7 @@ export default function AnalysisScreen() {
                 PROOF COPY &bull; UNEXECUTED
               </span>
               <span className="font-code-mono text-[9px] text-outline">
-                STAMP &bull; SESSION {state.clauses.length}
+                SESSION COPY &bull; ZERO RETENTION
               </span>
             </span>
             <DocumentPane clauses={clauses} title={state.fileName ?? 'Document'} />

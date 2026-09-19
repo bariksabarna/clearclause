@@ -1,3 +1,6 @@
+/**
+ * Persistent site header. Renders the wordmark and primary navigation with active-route highlighting for the analyzer, Q&A, checklist, compare, and help screens.
+ */
 import { NavLink } from 'react-router-dom';
 import Logo from './Logo.jsx';
 

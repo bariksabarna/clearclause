@@ -1,3 +1,6 @@
+/**
+ * Q&A screen. Grounded chat over the analyzed session: sends the document text with each question, renders answers with citation chips, and exposes empty / unanalyzed states plus strict-grounding messaging.
+ */
 import { Link } from 'react-router-dom';
 import { useSession, appendChat } from '../store/session.jsx';
 import { scrollToClause } from '../lib/scrollTo.js';

@@ -23,7 +23,9 @@ describe('App', () => {
     await screen.findByRole('heading', { name: 'Understand your contract in plain English.' });
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
     expect(
-      screen.getByText('© 2024 ClearClause Analytical Systems. All rights reserved.')
+      screen.getByText(
+        `© ${new Date().getFullYear()} ClearClause Analytical Systems. All rights reserved.`
+      )
     ).toBeInTheDocument();
   });
 

@@ -1,3 +1,6 @@
+/**
+ * Analyzing screen. Streams the analyze endpoint over SSE, advances a four-stage progress stepper as tagged clauses arrive, supports user abort (AbortController) for in-flight requests, and navigates to the analysis on completion.
+ */
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { streamAnalyze, isIntakeErrorCode } from '../lib/api.js';

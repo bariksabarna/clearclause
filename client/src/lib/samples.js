@@ -25,7 +25,7 @@ This letter confirms our offer of employment to you as Senior Product Designer.
 
 export const LEASE_TEXT = `Residential Apartment Lease Agreement
 
-1. Term. This lease begins on October 1, 2024 and ends on September 30, 2025.
+1. Term. This lease begins on October 1, 2026 and ends on September 30, 2027.
 
 2. Rent. Tenant shall pay $2,450.00 per month. Rent is due on the first day of each month.
 

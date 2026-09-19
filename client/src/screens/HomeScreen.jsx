@@ -1,3 +1,6 @@
+/**
+ * Home screen. Hero, upload dropzone (drag-drop + picker + 5 MB + zero-retention framing), one-tap demo chips for the three samples, and the four-part ClearClause pitch grid. Nothing is stored on a server by design.
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession, beginAnalysis } from '../store/session.jsx';

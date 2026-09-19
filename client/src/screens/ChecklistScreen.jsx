@@ -1,3 +1,6 @@
+/**
+ * Checklist screen. Derives a pre-meeting lawyer checklist from the tagged clauses, lets the user tick items and add custom items, exports to PDF/TXT or copies to the clipboard, and shows a derive-progress state.
+ */
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSession, setChecklist } from '../store/session.jsx';
