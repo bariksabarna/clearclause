@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './fonts.css';
 
 /* ClearClause design tokens — Archival Legal Markup system.
  * Palette tuned around bond paper, archival ink, and marking inks. */
