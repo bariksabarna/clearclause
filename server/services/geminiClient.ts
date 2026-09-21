@@ -13,9 +13,9 @@ import { aiUnreachable } from '../errors';
 /** How long one generateContent call may take before aborting. */
 export const DEFAULT_TIMEOUT_MS = 60_000;
 /** Additional attempts after the first call (total = retries + 1). */
-export const DEFAULT_RETRIES = 1;
-/** Pause between retry attempts in milliseconds. */
-export const DEFAULT_BACKOFF_MS = 800;
+export const DEFAULT_RETRIES = 3;
+/** Base pause between retry attempts in milliseconds (grows exponentially). */
+export const DEFAULT_BACKOFF_MS = 900;
 
 export interface GeminiOptions {
   apiKey: string;
@@ -249,6 +249,24 @@ interface GeminiResponseShape {
   error?: { message?: string };
 }
 
+/** Longest single wait when the provider asks us to retry (quota reset). */
+const MAX_RETRY_AFTER_MS = 45_000;
+
+/**
+ * Derive how long to pause before retrying a 429 from the `Retry-After` header
+ * or Google's "Please retry in <N>s" quota message.
+ *
+ * @param header - Raw `Retry-After` header, when present.
+ * @param message - Provider error message, when present.
+ * @returns Milliseconds to wait, capped at `MAX_RETRY_AFTER_MS`.
+ */
+export function parseRetryHint(header: string | null, message: string): number {
+  const fromHeader = header ? Number.parseFloat(header) : NaN;
+  const fromMessage = message ? Number.parseFloat(message.match(/retry in ([\d.]+)s?/i)?.[1] ?? '') : NaN;
+  const seconds = Number.isFinite(fromHeader) ? fromHeader : Number.isFinite(fromMessage) ? fromMessage : 5;
+  return Math.min(Math.max(seconds, 1) * 1000, MAX_RETRY_AFTER_MS);
+}
+
 /**
  * Call the Gemini generateContent REST endpoint with retry + backoff.
  *
@@ -271,13 +289,16 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
   // Safety-blocked responses are terminal, not transient: fail fast instead of
   // burning the retry budget (the outer catch would otherwise swallow the throw).
   let blocked: Error | undefined;
+  let lastFailure = '';
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     // A disconnected caller means nobody is waiting — stop before spending
     // another (possibly retried) provider call.
     if (externalSignal?.aborted) break;
     if (attempt > 0) {
-      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      const jitter = Math.floor(Math.random() * backoffMs);
+      const delay = backoffMs * 2 ** (attempt - 1) + jitter;
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
     try {
       const controller = new AbortController();
@@ -298,18 +319,22 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
       }
 
       if (!response.ok) {
-        if (response.status >= 500 && attempt < retries) {
-          continue;
-        }
+        const status = response.status;
+        let apiMessage = '';
         try {
           const body = (await response.json()) as GeminiResponseShape;
-          const apiMessage = body.error?.message;
+          apiMessage = body.error?.message ?? '';
           if (apiMessage && /blocked|copyright|SAFETY/i.test(apiMessage)) {
             blocked = aiUnreachable();
             break;
           }
         } catch {
           // Non-JSON error body; fall through to the retry/exhaust path.
+        }
+        lastFailure = `HTTP ${status} ${apiMessage}`;
+        if (status === 429 && attempt < retries) {
+          const retryAfter = parseRetryHint(response.headers.get('retry-after'), apiMessage);
+          await new Promise((resolve) => setTimeout(resolve, retryAfter));
         }
         continue;
       }
@@ -318,15 +343,26 @@ export async function requestText(prompt: string, options: GeminiOptions): Promi
       const parts = body.candidates?.[0]?.content?.parts ?? [];
       const text = parts.map((part) => part.text ?? '').join('');
       if (text.length === 0) {
+        lastFailure = 'empty model text';
         continue;
       }
       return text;
-    } catch {
+    } catch (err) {
+      lastFailure = err instanceof Error ? err.message : String(err);
       // swallow attempt errors; retries are governed by the loop, final failure throws below
     }
     if (externalSignal?.aborted) break;
   }
 
   if (blocked) throw blocked;
+  console.error(
+    JSON.stringify({
+      level: 'error',
+      timestamp: new Date().toISOString(),
+      service: 'geminiClient',
+      code: 'AI_UNREACHABLE',
+      lastFailure,
+    })
+  );
   throw aiUnreachable();
 }

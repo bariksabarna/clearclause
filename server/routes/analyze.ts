@@ -169,6 +169,18 @@ export function createAnalyzeRouter(overrides?: {
           return;
         }
         try {
+          const appErr = asAppError(err);
+          console.error(
+            JSON.stringify({
+              level: 'error',
+              timestamp: new Date().toISOString(),
+              method: 'POST',
+              path: '/api/analyze',
+              status: appErr.status,
+              code: appErr.code,
+              reason: err instanceof Error ? err.message : String(err),
+            })
+          );
           sendSse(res, 'error', { message: 'Analysis interrupted.' });
           res.end();
         } catch {

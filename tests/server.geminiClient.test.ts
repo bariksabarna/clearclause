@@ -7,6 +7,7 @@ import {
   parseChatResponse,
   parseChecklistResponse,
   parseJsonBlock,
+  parseRetryHint,
   parseSummaryResponse,
   parseTaggingResponse,
   requestText,
@@ -42,6 +43,22 @@ describe('parseJsonBlock', () => {
 
   it('throws when no JSON-like structure exists', () => {
     expect(() => parseJsonBlock('just some prose without json')).toThrow('NO_JSON_IN_RESPONSE');
+  });
+});
+
+describe('parseRetryHint', () => {
+  it('uses the Retry-After header when present', () => {
+    expect(parseRetryHint('25', '')).toBe(25_000);
+    expect(parseRetryHint('1.5', '')).toBe(1_500);
+  });
+
+  it('falls back to the quota message when no header is present', () => {
+    expect(parseRetryHint(null, 'Please retry in 25.48946477s.')).toBeCloseTo(25_489, 0);
+  });
+
+  it('caps long waits and floors short ones', () => {
+    expect(parseRetryHint(null, 'Please retry in 900s.')).toBe(45_000);
+    expect(parseRetryHint(null, '')).toBe(5_000);
   });
 });
 
@@ -248,8 +265,15 @@ describe('requestText', () => {
   });
 
   it('falls back to global fetch and default options when none are provided', async () => {
-    await expect(requestText('p', { apiKey: 'k' })).rejects.toMatchObject({ name: 'AppError' });
-    expect(globalThis.fetch).toHaveBeenCalled();
+    const original = globalThis.fetch;
+    const fetchMock = vi.fn(async () => textResponse('plain answer'));
+    globalThis.fetch = fetchMock;
+    try {
+      await expect(requestText('p', { apiKey: 'k' })).resolves.toBe('plain answer');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.fetch = original;
+    }
   });
 
   it('skips the provider entirely when the caller signal is already aborted', async () => {
