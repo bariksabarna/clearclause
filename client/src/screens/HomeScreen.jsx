@@ -123,16 +123,21 @@ export default function HomeScreen() {
                 </button>
               ))}
             </div>
-            <a
-              href="/samples/12-Month-Apartment-Lease.pdf"
-              download
-              className="mt-4 inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary transition-colors hover:text-primary"
-            >
-              <span aria-hidden="true" className="material-symbols-outlined text-[15px]">
-                download
-              </span>
-              Download sample lease as PDF
-            </a>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              {SAMPLES.map((sample) => (
+                <a
+                  key={sample.key}
+                  href={`/samples/${sample.fileName.replace(/ /g, '-')}`}
+                  download
+                  className="inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary transition-colors hover:text-primary"
+                >
+                  <span aria-hidden="true" className="material-symbols-outlined text-[15px]">
+                    download
+                  </span>
+                  Download {sample.title.toLowerCase()} as PDF
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </section>

@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LEASE_TEXT } from '../client/src/lib/samples.js';
+import { SAMPLES } from '../client/src/lib/samples.js';
 
 const require = createRequire(import.meta.url);
 const PDFDocument = require('pdfkit');
@@ -10,23 +10,10 @@ const PDFDocument = require('pdfkit');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(__dirname, '../client/public/samples');
 mkdirSync(outDir, { recursive: true });
-const outPath = resolve(outDir, '12-Month-Apartment-Lease.pdf');
 
-const doc = new PDFDocument({
-  size: 'LETTER',
-  margins: { top: 56, bottom: 56, left: 64, right: 64 },
-});
+const PAGE_LIMIT = 792 - 56 - 60;
 
-const title = 'Residential Apartment Lease Agreement';
-const titleIndex = LEASE_TEXT.split('\n').findIndex((line) => line.trim() === title);
-const body = LEASE_TEXT.split('\n')
-  .map((line) => line.trim())
-  .filter(Boolean)
-  .slice(titleIndex + 1);
-
-const PAGE_LIMIT = doc.page.height - doc.page.margins.bottom - 60;
-
-function drawHeader() {
+function drawHeader(doc, title) {
   doc
     .font('Courier-Bold')
     .fontSize(7.5)
@@ -55,45 +42,65 @@ function drawHeader() {
     .moveDown(0.9);
 }
 
-drawHeader();
-
-doc.fillColor('#191c1b');
-for (const line of body) {
-  const match = line.match(/^(\d+)\.\s+(.*)$/);
-  if (!match) {
-    doc.font('Helvetica-Oblique').fontSize(10).fillColor('#45464d').text(line).moveDown(0.6);
-    continue;
-  }
-  const number = match[1];
-  const rest = match[2];
-  const firstPeriod = rest.indexOf('.');
-  const label = firstPeriod === -1 ? rest : rest.slice(0, firstPeriod + 1);
-  const remainder = firstPeriod === -1 ? '' : rest.slice(firstPeriod + 1).trim();
-  const width = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const height = doc.heightOfString(`${number}. ${label}${remainder ? ' ' + remainder : ''}`, {
-    width,
-    font: 'Helvetica',
-    fontSize: 11,
+function makePdf(outPath, title, text) {
+  const doc = new PDFDocument({
+    size: 'LETTER',
+    margins: { top: 56, bottom: 56, left: 64, right: 64 },
   });
-  if (doc.y + height > PAGE_LIMIT) doc.addPage();
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(11)
-    .fillColor('#191c1b')
-    .text(`${number}. ${label} `, { continued: true });
-  if (remainder) {
-    doc.font('Helvetica').text(remainder);
-  } else {
-    doc.text('');
+
+  const titleIndex = text.split('\n').findIndex((line) => line.trim() === title);
+  const body = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(titleIndex + 1);
+
+  drawHeader(doc, title);
+
+  doc.fillColor('#191c1b');
+  for (const line of body) {
+    const match = line.match(/^(\d+)\.\s+(.*)$/);
+    if (!match) {
+      doc.font('Helvetica-Oblique').fontSize(10).fillColor('#45464d').text(line).moveDown(0.6);
+      continue;
+    }
+    const number = match[1];
+    const rest = match[2];
+    const firstPeriod = rest.indexOf('.');
+    const label = firstPeriod === -1 ? rest : rest.slice(0, firstPeriod + 1);
+    const remainder = firstPeriod === -1 ? '' : rest.slice(firstPeriod + 1).trim();
+    const width = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const height = doc.heightOfString(`${number}. ${label}${remainder ? ' ' + remainder : ''}`, {
+      width,
+      font: 'Helvetica',
+      fontSize: 11,
+    });
+    if (doc.y + height > PAGE_LIMIT) doc.addPage();
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(11)
+      .fillColor('#191c1b')
+      .text(`${number}. ${label} `, { continued: true });
+    if (remainder) {
+      doc.font('Helvetica').text(remainder);
+    } else {
+      doc.text('');
+    }
+    doc.moveDown(0.7);
   }
-  doc.moveDown(0.7);
+
+  doc.on('pageAdded', () => drawHeader(doc, title));
+
+  doc.pipe(require('node:fs').createWriteStream(outPath));
+  doc.end();
+
+  doc.on('end', () => {
+    console.log(`wrote ${outPath}`);
+  });
 }
 
-doc.on('pageAdded', () => drawHeader());
+const fileSlug = (fileName) => fileName.replace(/ /g, '-');
 
-doc.end();
-doc.pipe(require('node:fs').createWriteStream(outPath));
-
-doc.on('end', () => {
-  console.log(`wrote ${outPath}`);
-});
+for (const sample of SAMPLES) {
+  makePdf(resolve(outDir, fileSlug(sample.fileName)), sample.title, sample.text);
+}
